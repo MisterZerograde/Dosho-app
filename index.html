@@ -471,6 +471,11 @@ body{font-family:'Mitr',-apple-system,sans-serif;background:var(--bg);color:var(
     <div class="tb-title" id="tb-title">แดชบอร์ด</div>
     <span class="info-i" style="margin-left:2px" data-tip="KPI รายเดือน, ปฏิทินกำไร/ขาดทุน และกราฟ Equity Curve สะสม">i</span>
     <div class="tb-spacer"></div>
+    <label class="btn btn-ghost" style="cursor:pointer;display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;padding:7px 13px;margin-right:6px" title="นำเข้า CSV จาก MT5">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+      Import MT5
+      <input type="file" accept=".csv,.htm,.html" style="display:none" onchange="handleCSVImport(event)">
+    </label>
     <button class="btn" style="background: linear-gradient(135deg, #282C67, #4F46E5); color: #fff; font-size: 12px; font-weight: 700; padding: 8px 16px; border-radius: 8px; box-shadow: 0 4px 12px rgba(40, 44, 103, 0.2); display: flex; align-items: center; gap: 5px; border: none; cursor: pointer; transition: transform 0.1s ease;" onclick="openModal()" onmousedown="this.style.transform='scale(0.97)'" onmouseup="this.style.transform='scale(1)'" onmouseleave="this.style.transform='scale(1)'">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="stroke-linecap: round; stroke-linejoin: round;"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
       บันทึกการเทรดใหม่
@@ -754,10 +759,36 @@ body{font-family:'Mitr',-apple-system,sans-serif;background:var(--bg);color:var(
           </div>
         </div>
         <div class="card mt16">
-          <div class="card-hd"><span class="card-title">ข้อมูล</span></div>
+          <div class="card-hd"><span class="card-title">นำเข้าจาก MT5</span></div>
+          <div class="card-bd" style="display:flex;flex-direction:column;gap:6px">
+            <div style="font-size:12px;color:var(--text2);line-height:1.6">ส่งออกประวัติการเทรดจาก MetaTrader 5 แล้วเลือกไฟล์ที่นี่ ระบบจะนำเข้าทุกรายการโดยอัตโนมัติ</div>
+            <div style="font-size:11px;color:var(--text3);margin-bottom:4px">วิธีส่งออก: MT5 → View → Terminal → History → คลิกขวา → Save as Report (CSV)</div>
+            <label class="btn btn-ghost" style="cursor:pointer;display:inline-flex;align-items:center;gap:6px;width:fit-content">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+              เลือกไฟล์ CSV จาก MT5
+              <input type="file" accept=".csv,.htm,.html" style="display:none" onchange="handleCSVImport(event)">
+            </label>
+            <div id="import-status" style="font-size:11px;color:var(--green);display:none"></div>
+          </div>
+        </div>
+        <div class="card mt16">
+          <div class="card-hd"><span class="card-title">สำรอง / กู้คืนข้อมูล</span></div>
           <div class="card-bd" style="display:flex;flex-direction:column;gap:10px">
-            <div style="font-size:12px;color:var(--text2)">ข้อมูลการเทรดทั้งหมดจะถูกบันทึกไว้ในเบราว์เซอร์ของคุณโดยตรง</div>
-            <button class="btn btn-red" onclick="clearAllData()" style="width:fit-content">ล้างข้อมูลทั้งหมด</button>
+            <div style="font-size:12px;color:var(--text2)">ข้อมูลทั้งหมดบันทึกอยู่ในเบราว์เซอร์ของคุณ แนะนำให้สำรองข้อมูลสม่ำเสมอ</div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <button class="btn btn-ghost" onclick="exportBackup()" style="display:inline-flex;align-items:center;gap:6px">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                ส่งออก (Export)
+              </button>
+              <label class="btn btn-ghost" style="cursor:pointer;display:inline-flex;align-items:center;gap:6px">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                นำเข้า (Restore)
+                <input type="file" accept=".json" style="display:none" onchange="handleBackupImport(event)">
+              </label>
+            </div>
+            <div style="border-top:1px solid var(--border);padding-top:10px">
+              <button class="btn btn-red" onclick="clearAllData()" style="width:fit-content">ล้างข้อมูลทั้งหมด</button>
+            </div>
           </div>
         </div>
       </div>
@@ -2211,6 +2242,164 @@ function switchPanel(id, el) {
     tip.style.display = 'none';
   });
 })();
+
+/* ═══ CSV IMPORT ═══ */
+function handleCSVImport(e) {
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    const text = ev.target.result;
+    const imported = parseMT5CSV(text);
+    if(!imported.length) {
+      alert('ไม่พบรายการเทรดในไฟล์นี้\n\nกรุณาส่งออกจาก MT5: View → Terminal → History → คลิกขวา → Save as Report (CSV)');
+      e.target.value = '';
+      return;
+    }
+    let added = 0;
+    imported.forEach(t => {
+      const dup = trades.some(x => x.openDt === t.openDt && x.symbol === t.symbol && Math.abs(x.pnl - t.pnl) < 0.01);
+      if(!dup) { trades.push(t); added++; }
+    });
+    trades.sort((a,b) => new Date(a.openDt) - new Date(b.openDt));
+    persist();
+    renderDashboard(); renderCalendar(); renderTradeTable(); renderReports();
+    const status = document.getElementById('import-status');
+    if(status) {
+      status.style.display = 'block';
+      status.textContent = `✓ นำเข้าสำเร็จ! เพิ่ม ${added} รายการใหม่ (ข้าม ${imported.length - added} รายการที่มีอยู่แล้ว)`;
+      setTimeout(() => { status.style.display = 'none'; }, 5000);
+    }
+    e.target.value = '';
+  };
+  reader.readAsText(file, 'UTF-8');
+}
+
+function parseMT5CSV(text) {
+  const lines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+  const result = [];
+  let headerIdx = -1, delim = ',';
+
+  for(let i = 0; i < Math.min(lines.length, 30); i++) {
+    const l = lines[i];
+    if(/time.*type.*(volume|size).*symbol.*price.*profit/i.test(l) ||
+       /position.*time.*type/i.test(l) ||
+       /open.?time.*type.*size.*symbol.*price.*profit/i.test(l)) {
+      headerIdx = i;
+      delim = l.includes(';') ? ';' : (l.includes('\t') ? '\t' : ',');
+      break;
+    }
+  }
+  if(headerIdx === -1) return [];
+
+  const headers = lines[headerIdx].split(delim).map(h => h.replace(/['"]/g,'').trim().toLowerCase());
+  const col = (...names) => { for(const n of names) { const i = headers.findIndex(h => h.includes(n)); if(i>=0) return i; } return -1; };
+
+  const iTime   = col('open time','time');
+  const iType   = col('type');
+  const iVol    = col('volume','size');
+  const iSym    = col('symbol');
+  const iOpenPx = col('open price','price');
+  const iCloseT = col('close time');
+  const iClosePx= col('close price');
+  const iComm   = col('commission');
+  const iSwap   = col('swap');
+  const iProfit = col('profit');
+
+  const flt = s => parseFloat((s||'').replace(/[, ]/g,'')) || 0;
+  const fltN = s => { const v = parseFloat((s||'').replace(/[, ]/g,'')); return isNaN(v) ? null : v; };
+  const dtmt5 = s => {
+    if(!s) return '';
+    // "2026.01.15 09:32:45" or "2026.01.15 09:32" → "2026-01-15T09:32"
+    return s.trim().replace(/\./g,'-').replace(' ','T').slice(0,16);
+  };
+
+  for(let i = headerIdx + 1; i < lines.length; i++) {
+    const raw = lines[i];
+    if(!raw || raw.startsWith('#') || /^\s*$/.test(raw)) continue;
+    const c = raw.split(delim).map(s => s.replace(/^"|"$/g,'').trim());
+    if(c.length < 5) continue;
+
+    const g = idx => (idx >= 0 && idx < c.length) ? c[idx] : '';
+    const typeStr = g(iType).toLowerCase();
+    if(!['buy','sell'].includes(typeStr)) continue;
+    const sym = g(iSym);
+    if(!sym) continue;
+
+    const profit = flt(g(iProfit));
+    const comm   = flt(g(iComm));
+    const swap   = flt(g(iSwap));
+    const pnl    = +(profit + comm + swap).toFixed(2);
+
+    result.push({
+      id: Date.now().toString(36) + Math.random().toString(36).slice(2),
+      symbol:    sym.toUpperCase(),
+      direction: typeStr === 'buy' ? 'BUY' : 'SELL',
+      openDt:    dtmt5(g(iTime)),
+      closeDt:   dtmt5(g(iCloseT)),
+      openPx:    fltN(g(iOpenPx)),
+      closePx:   fltN(g(iClosePx)),
+      volume:    fltN(g(iVol)),
+      pnl,
+      commission: fltN(g(iComm)),
+      tag: '',
+      notes: '',
+    });
+  }
+  return result;
+}
+
+/* ═══ BACKUP / RESTORE ═══ */
+function exportBackup() {
+  const data = {
+    version: 1,
+    exportedAt: new Date().toISOString(),
+    trades, journal, settings, checklist,
+    tags: selectedTags,
+    tagPool: defaultTags,
+  };
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `dosho-backup-${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+function handleBackupImport(e) {
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    try {
+      const data = JSON.parse(ev.target.result);
+      if(!data.trades || !Array.isArray(data.trades)) {
+        alert('ไฟล์ไม่ถูกต้อง กรุณาเลือกไฟล์สำรองข้อมูลของ Dosho (.json)');
+        return;
+      }
+      if(!confirm(`นำเข้า ${data.trades.length} รายการจากไฟล์สำรอง?\n\nข้อมูลปัจจุบันทั้งหมดจะถูกแทนที่`)) return;
+      trades     = data.trades;
+      journal    = data.journal    || {};
+      settings   = data.settings   || settings;
+      checklist  = data.checklist  || { entry:[], exit:[] };
+      selectedTags = data.tags     || [];
+      defaultTags  = data.tagPool  || [..._defaultTagPool];
+      localStorage.setItem('dosho_trades',    JSON.stringify(trades));
+      localStorage.setItem('dosho_journal',   JSON.stringify(journal));
+      localStorage.setItem('dosho_settings',  JSON.stringify(settings));
+      localStorage.setItem('dosho_checklist', JSON.stringify(checklist));
+      localStorage.setItem('dosho_tags',      JSON.stringify(selectedTags));
+      localStorage.setItem('dosho_tag_pool',  JSON.stringify(defaultTags));
+      loadSettings(); loadJournal(); renderChecklist(); renderTags();
+      renderDashboard(); renderCalendar(); renderTradeTable(); renderReports();
+      alert('✓ กู้คืนข้อมูลสำเร็จ!');
+    } catch(err) {
+      alert('ไม่สามารถอ่านไฟล์ได้ กรุณาตรวจสอบว่าเป็นไฟล์ .json ที่ถูกต้อง');
+    }
+    e.target.value = '';
+  };
+  reader.readAsText(file, 'UTF-8');
+}
 
 /* ═══ BOOT ═══ */
 renderTags();

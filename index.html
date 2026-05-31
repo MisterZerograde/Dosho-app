@@ -2063,6 +2063,7 @@ function saveSettings() {
 function clearAllData() {
   if(!confirm('คุณต้องการลบข้อมูลการเทรดและบันทึกทั้งหมดใช่หรือไม่? การดำเนินการนี้ไม่สามารถย้อนกลับได้')) return;
   localStorage.clear();
+  localStorage.setItem('dosho_seeded', '1'); // prevent demo data from reloading on next refresh
   trades = []; journal = {}; checklist = {entry:[],exit:[]}; selectedTags = []; defaultTags = [..._defaultTagPool];
   renderDashboard(); renderCalendar(); renderTradeTable(); renderReports(); loadJournal(); renderChecklist(); renderTags();
 }

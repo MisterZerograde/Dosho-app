@@ -570,10 +570,16 @@ body{font-family:'Mitr',-apple-system,sans-serif;background:var(--bg);color:var(
               <button class="cal-arr" id="cal-next">&#8250;</button>
               <button class="chip chip-gr" style="cursor:pointer;border:none;font-family:inherit;margin-left:6px" onclick="goToThisMonth()">เดือนนี้</button>
               <div class="cal-chips" id="cal-chips" style="margin-left:6px"></div>
+              <label style="display:flex;align-items:center;gap:6px;margin-left:auto;cursor:pointer;font-size:12px;color:var(--text2);user-select:none" onclick="toggleCalWeekend()">
+                วันหยุด
+                <div id="cal-wknd-sw" style="width:32px;height:18px;border-radius:9px;position:relative;transition:background .2s">
+                  <div style="width:14px;height:14px;border-radius:50%;background:#fff;position:absolute;top:2px;left:2px;transition:transform .2s;box-shadow:0 1px 3px rgba(0,0,0,.3)"></div>
+                </div>
+              </label>
             </div>
             <div class="cal-wrap" style="flex:1;min-height:0">
               <div class="cal-main" style="flex:1;display:flex;flex-direction:column;min-height:0">
-                <div class="cal-hdr">
+                <div class="cal-hdr" id="cal-hdr">
                   <div class="cal-dow">อา.</div><div class="cal-dow">จ.</div><div class="cal-dow">อ.</div>
                   <div class="cal-dow">พ.</div><div class="cal-dow">พฤ.</div><div class="cal-dow">ศ.</div><div class="cal-dow">ส.</div>
                 </div>
@@ -915,6 +921,7 @@ let checklist = JSON.parse(localStorage.getItem(acctKey('dosho_checklist')) || '
 let activeFilter = 'all';
 let editId = null;
 let calYear, calMonth;
+let calShowWeekend = JSON.parse(localStorage.getItem('dosho_cal_weekend') ?? 'true');
 let activeJournalDate = new Date().toISOString().slice(0,10);
 let rptChartInst = null;
 
@@ -1228,6 +1235,22 @@ function renderCalendar() {
   const monthNames = ['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
   document.getElementById('cal-mon-lbl').textContent = monthNames[calMonth] + ' ' + calYear;
 
+  // weekend toggle switch appearance
+  const swEl = document.getElementById('cal-wknd-sw');
+  if(swEl) {
+    swEl.style.background = calShowWeekend ? 'var(--purple)' : 'var(--border)';
+    const knob = swEl.querySelector('div');
+    if(knob) knob.style.transform = calShowWeekend ? 'translateX(14px)' : '';
+  }
+  // day-of-week header
+  const hdrEl = document.getElementById('cal-hdr');
+  if(hdrEl) {
+    hdrEl.style.gridTemplateColumns = calShowWeekend ? 'repeat(7,1fr)' : 'repeat(5,1fr)';
+    hdrEl.innerHTML = calShowWeekend
+      ? '<div class="cal-dow">อา.</div><div class="cal-dow">จ.</div><div class="cal-dow">อ.</div><div class="cal-dow">พ.</div><div class="cal-dow">พฤ.</div><div class="cal-dow">ศ.</div><div class="cal-dow">ส.</div>'
+      : '<div class="cal-dow">จ.</div><div class="cal-dow">อ.</div><div class="cal-dow">พ.</div><div class="cal-dow">พฤ.</div><div class="cal-dow">ศ.</div>';
+  }
+
   // group trades by day for this month
   const dayMap = {};
   trades.forEach(t => {
@@ -1271,7 +1294,9 @@ function renderCalendar() {
   weeks.forEach(week => {
     const row = document.createElement('div');
     row.className = 'cal-week';
-    week.forEach(day => {
+    if(!calShowWeekend) row.style.gridTemplateColumns = 'repeat(5,1fr)';
+    const displayCells = calShowWeekend ? week : week.filter((_, i) => i >= 1 && i <= 5);
+    displayCells.forEach(day => {
       const cell = document.createElement('div');
       if(!day) {
         cell.className='cal-day';
@@ -2136,6 +2161,12 @@ function goToThisMonth() {
   const now = new Date();
   calYear = now.getFullYear();
   calMonth = now.getMonth();
+  renderCalendar();
+}
+
+function toggleCalWeekend() {
+  calShowWeekend = !calShowWeekend;
+  localStorage.setItem('dosho_cal_weekend', JSON.stringify(calShowWeekend));
   renderCalendar();
 }
 

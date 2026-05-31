@@ -60,9 +60,9 @@ body{font-family:'Mitr',-apple-system,sans-serif;background:var(--bg);color:var(
 .content{flex:1;overflow:hidden;padding:16px 20px;display:flex;flex-direction:column;min-height:0}
 .tab-panel{display:none;animation:panelIn .22s ease both}
 .tab-panel.active{display:block}
-#panel-dashboard.active{display:flex;flex-direction:column;flex:1;min-height:0;overflow:hidden}
+#panel-dashboard.active{display:flex;flex-direction:column;flex:1;min-height:0;overflow-y:auto}
 @keyframes panelIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
-#dash-content{flex:1;min-height:0;overflow:hidden}
+#dash-content{}
 
 /* ─── KPI ROW ─── */
 .kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;width:100%}
@@ -81,7 +81,7 @@ body{font-family:'Mitr',-apple-system,sans-serif;background:var(--bg);color:var(
 .card-bd{padding:14px 16px}
 
 /* ─── CALENDAR ─── */
-.dash-grid{display:grid;grid-template-columns:1fr;grid-template-rows:1fr;gap:14px;flex:1 1 0;min-height:0;align-items:stretch;overflow:hidden}
+.dash-grid{display:grid;grid-template-columns:1fr;gap:14px}
 .cal-nav-row{display:flex;align-items:center;gap:8px;padding:10px 14px;border-bottom:1px solid var(--border2);flex-shrink:0}
 .cal-arr{width:22px;height:22px;border-radius:5px;background:transparent;border:1px solid var(--border);color:var(--text2);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:13px;transition:background .12s}
 .cal-arr:hover{background:var(--surface2)}
@@ -91,14 +91,14 @@ body{font-family:'Mitr',-apple-system,sans-serif;background:var(--bg);color:var(
 .chip-g{background:rgba(16,185,129,.15);color:var(--green)}
 .chip-gr{background:var(--surface2);color:var(--text2)}
 
-.dash-grid>.card:first-child{display:flex;flex-direction:column;min-height:0}
-.cal-wrap{display:flex;flex:1;min-height:0;overflow:hidden}
-.cal-main{flex:1;display:flex;flex-direction:column;min-height:0}
+.dash-grid>.card:first-child{display:flex;flex-direction:column}
+.cal-wrap{display:flex;overflow:hidden}
+.cal-main{flex:1;display:flex;flex-direction:column}
 .cal-hdr{display:grid;grid-template-columns:repeat(7,1fr);padding:6px 12px 0;flex-shrink:0}
 .cal-dow{text-align:center;font-size:11px;font-weight:600;color:var(--text3);padding:5px 0}
-.cal-body-wrap{padding:0 10px 10px;display:flex;flex-direction:column;gap:3px;flex:1;min-height:0}
-.cal-week{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;flex:1;min-height:0}
-.cal-day{border-radius:7px;padding:4px 5px;min-height:0;position:relative;cursor:default;border:1px solid transparent;transition:border-color .15s,box-shadow .15s,transform .15s}
+.cal-body-wrap{padding:0 10px 10px;display:flex;flex-direction:column;gap:3px}
+.cal-week{display:grid;grid-template-columns:repeat(7,1fr);gap:3px}
+.cal-day{border-radius:7px;padding:4px 5px;aspect-ratio:1;position:relative;cursor:default;border:1px solid transparent;transition:border-color .15s,box-shadow .15s,transform .15s}
 .cal-day:hover{border-color:rgba(62,69,184,0.2);box-shadow:0 0 0 2px rgba(62,69,184,0.07)}
 .cal-day.has-trades{cursor:pointer}
 .cal-day.has-trades:hover{transform:scale(1.02);border-color:rgba(62,69,184,0.3);box-shadow:0 2px 10px rgba(40,44,103,0.1)}
@@ -366,7 +366,7 @@ body{font-family:'Mitr',-apple-system,sans-serif;background:var(--bg);color:var(
 .kpi-rr-loss-lbl{font-size:11px;font-weight:500;color:var(--red);white-space:nowrap}
 
 /* ─── UPDATED DASH GRID ─── */
-.dash-grid{display:grid;grid-template-columns:1fr;grid-template-rows:1fr;gap:14px;flex:1 1 0;min-height:0;align-items:stretch;overflow:hidden}
+.dash-grid{display:grid;grid-template-columns:1fr;gap:14px}
 
 /* ─── ZELLA SCORE RIGHT PANEL ─── */
 .zella-card{display:flex;flex-direction:column;gap:0}
@@ -492,7 +492,7 @@ body{font-family:'Mitr',-apple-system,sans-serif;background:var(--bg);color:var(
 
     <!-- ══ DASHBOARD ══ -->
     <div id="panel-dashboard" class="tab-panel active">
-      <div id="dash-content" style="display:flex;flex-direction:column;flex:1;min-height:0;overflow:hidden;gap:10px">
+      <div id="dash-content" style="display:flex;flex-direction:column;gap:10px">
         <!-- KPI Row -->
         <div class="kpi-row">
           <!-- Net P&L -->
@@ -561,9 +561,9 @@ body{font-family:'Mitr',-apple-system,sans-serif;background:var(--bg);color:var(
         </div>
 
         <!-- Main grid -->
-        <div class="dash-grid" style="flex:1;min-height:0">
+        <div class="dash-grid">
           <!-- Calendar -->
-          <div class="card" style="display:flex;flex-direction:column;min-height:0">
+          <div class="card" style="display:flex;flex-direction:column">
             <div class="cal-nav-row">
               <button class="cal-arr" id="cal-prev">&#8249;</button>
               <span class="cal-mon" id="cal-mon-lbl"></span>
@@ -577,8 +577,8 @@ body{font-family:'Mitr',-apple-system,sans-serif;background:var(--bg);color:var(
                 </div>
               </label>
             </div>
-            <div class="cal-wrap" style="flex:1;min-height:0">
-              <div class="cal-main" style="flex:1;display:flex;flex-direction:column;min-height:0">
+            <div class="cal-wrap">
+              <div class="cal-main">
                 <div class="cal-hdr" id="cal-hdr">
                   <div class="cal-dow">อา.</div><div class="cal-dow">จ.</div><div class="cal-dow">อ.</div>
                   <div class="cal-dow">พ.</div><div class="cal-dow">พฤ.</div><div class="cal-dow">ศ.</div><div class="cal-dow">ส.</div>

@@ -157,6 +157,8 @@ body{font-family:'Mitr',-apple-system,sans-serif;background:var(--bg);color:var(
 .ttype.s{background:rgba(239,68,68,.15);color:var(--red)}
 .pnl-p{color:var(--green);font-weight:500}
 .pnl-n{color:var(--red);font-weight:500}
+.tr-win{background:var(--green-dim)}
+.tr-loss{background:var(--red-dim)}
 .td-actions{display:flex;gap:5px;opacity:0;transition:opacity .12s}
 .trades-tbl tr:hover .td-actions{opacity:1}
 .act-btn{width:24px;height:24px;border-radius:5px;border:1px solid var(--border);background:transparent;color:var(--text3);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:11px;font-family:inherit;transition:all .12s}
@@ -715,6 +717,8 @@ body{font-family:'Mitr',-apple-system,sans-serif;background:var(--bg);color:var(
             <div class="rpt-stat-row"><span class="rpt-stat-lbl">ไม้ที่ขาดทุนสูงสุด</span><span class="rpt-stat-val red" id="r-worst">—</span></div>
             <div class="rpt-stat-row"><span class="rpt-stat-lbl">ชนะติดต่อกันสูงสุด</span><span class="rpt-stat-val" id="r-streak">—</span></div>
             <div class="rpt-stat-row"><span class="rpt-stat-lbl">แพ้ติดต่อกันสูงสุด</span><span class="rpt-stat-val" id="r-lstreak">—</span></div>
+            <div class="rpt-stat-row"><span class="rpt-stat-lbl">Sharpe Ratio</span><span class="rpt-stat-val" id="r-sharpe">—</span></div>
+            <div class="rpt-stat-row"><span class="rpt-stat-lbl">Recovery Factor</span><span class="rpt-stat-val" id="r-rf">—</span></div>
           </div>
         </div>
         <div class="card">
@@ -1076,7 +1080,23 @@ function calcStats(ts) {
   const streakScore = Math.min(maxW/10*100,100)*0.2;
   const score = Math.round(wrScore + pfScore + rrScore + streakScore);
 
-  return {netPnl,grossWin,grossLoss,pf,wr,avgWin,avgLoss,best,worst,maxW,maxL,score,wins,losses};
+  // Sharpe ratio (per-trade)
+  const mean = netPnl / ts.length;
+  const variance = pnls.reduce((s,v) => s + (v-mean)**2, 0) / ts.length;
+  const std = Math.sqrt(variance);
+  const sharpe = std > 0 ? +(mean / std).toFixed(2) : null;
+
+  // Recovery factor = net P&L / max drawdown
+  let peak = 0, drawCum = 0, maxDD = 0;
+  ts.forEach(t => {
+    drawCum += t.pnl;
+    if(drawCum > peak) peak = drawCum;
+    const dd = peak - drawCum;
+    if(dd > maxDD) maxDD = dd;
+  });
+  const rf = maxDD > 0 ? +(netPnl / maxDD).toFixed(2) : null;
+
+  return {netPnl,grossWin,grossLoss,pf,wr,avgWin,avgLoss,best,worst,maxW,maxL,score,wins,losses,sharpe,rf};
 }
 
 /* ═══ DASHBOARD ═══ */
@@ -1328,7 +1348,7 @@ function renderCalendar() {
         const dateStr = `${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
         if(d) {
           cell.className = 'cal-day has-trades ' + (d.pnl>=0?'profit':'loss');
-          const pnlStr = (d.pnl>=0?'+':'') + fmtMoney(d.pnl);
+          const pnlStr = (d.pnl>=0?'+':'-') + fmtMoney(d.pnl);
           cell.innerHTML = `<span class="cal-dn">${day}</span>
             <span class="cal-pnl">${pnlStr}</span>
             <span class="cal-meta">${d.count} เทรด</span>`;
@@ -1449,8 +1469,9 @@ function renderTradeTable() {
   tbody.innerHTML = filtered.map(t => {
     const dateStr = t.openDt ? new Date(t.openDt).toLocaleString('th-TH',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}) : '—';
     const pnlCls = t.pnl >= 0 ? 'pnl-p' : 'pnl-n';
+    const rowCls = t.pnl >= 0 ? 'tr-win' : 'tr-loss';
     const pnlStr = (t.pnl>=0?'+':'') + getCurrencySymbol() + Math.abs(t.pnl).toLocaleString('th-TH',{minimumFractionDigits:2,maximumFractionDigits:2});
-    return `<tr>
+    return `<tr class="${rowCls}">
       <td><span class="sym">${t.symbol}</span>${t.tag?` <span style="margin-left:6px; display:inline-flex; gap:4px">${renderTradeTags(t.tag)}</span>`:''}
       </td>
       <td><span class="ttype ${t.direction==='BUY'?'b':'s'}">${t.direction}</span></td>
@@ -1488,6 +1509,12 @@ function renderReports() {
   document.getElementById('r-worst').textContent = s ? fmt(s.worst) : dash;
   document.getElementById('r-streak').textContent = s ? s.maxW + ' รายการ' : dash;
   document.getElementById('r-lstreak').textContent = s ? s.maxL + ' รายการ' : dash;
+  const sharpeEl = document.getElementById('r-sharpe');
+  sharpeEl.textContent = s && s.sharpe !== null ? s.sharpe.toFixed(2) : dash;
+  sharpeEl.className = 'rpt-stat-val' + (s && s.sharpe !== null ? (s.sharpe >= 0 ? ' green' : ' red') : '');
+  const rfEl = document.getElementById('r-rf');
+  rfEl.textContent = s && s.rf !== null ? s.rf.toFixed(2) : dash;
+  rfEl.className = 'rpt-stat-val' + (s && s.rf !== null ? (s.rf >= 0 ? ' green' : ' red') : '');
 
   // symbol breakdown
   const symMap = {};

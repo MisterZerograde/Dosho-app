@@ -81,7 +81,7 @@ body{font-family:'Mitr',-apple-system,sans-serif;background:var(--bg);color:var(
 .card-bd{padding:14px 16px}
 
 /* ─── CALENDAR ─── */
-.dash-grid{display:grid;grid-template-columns:64% 36%;grid-template-rows:1fr;gap:14px;flex:1 1 0;min-height:0;align-items:stretch;overflow:hidden}
+.dash-grid{display:grid;grid-template-columns:1fr;grid-template-rows:1fr;gap:14px;flex:1 1 0;min-height:0;align-items:stretch;overflow:hidden}
 .cal-nav-row{display:flex;align-items:center;gap:8px;padding:10px 14px;border-bottom:1px solid var(--border2);flex-shrink:0}
 .cal-arr{width:22px;height:22px;border-radius:5px;background:transparent;border:1px solid var(--border);color:var(--text2);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:13px;transition:background .12s}
 .cal-arr:hover{background:var(--surface2)}
@@ -366,7 +366,7 @@ body{font-family:'Mitr',-apple-system,sans-serif;background:var(--bg);color:var(
 .kpi-rr-loss-lbl{font-size:11px;font-weight:500;color:var(--red);white-space:nowrap}
 
 /* ─── UPDATED DASH GRID ─── */
-.dash-grid{display:grid;grid-template-columns:64% 36%;grid-template-rows:1fr;gap:14px;flex:1 1 0;min-height:0;align-items:stretch;overflow:hidden}
+.dash-grid{display:grid;grid-template-columns:1fr;grid-template-rows:1fr;gap:14px;flex:1 1 0;min-height:0;align-items:stretch;overflow:hidden}
 
 /* ─── ZELLA SCORE RIGHT PANEL ─── */
 .zella-card{display:flex;flex-direction:column;gap:0}
@@ -449,6 +449,10 @@ body{font-family:'Mitr',-apple-system,sans-serif;background:var(--bg);color:var(
     <button class="nav-item" onclick="switchPanel('reports',this)">
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
       รายงานสรุปผล
+    </button>
+    <button class="nav-item" onclick="switchPanel('accounts',this)">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+      บัญชี
     </button>
     <div class="nav-sep"></div>
     <button class="nav-item" onclick="switchPanel('settings',this)">
@@ -579,29 +583,6 @@ body{font-family:'Mitr',-apple-system,sans-serif;background:var(--bg);color:var(
             </div>
           </div>
 
-          <!-- Right panel: Radar + Cumulative P&L -->
-          <div style="display:flex;flex-direction:column;gap:10px;min-height:0;overflow:hidden">
-            <!-- Performance Radar card -->
-            <div class="card zella-card" style="flex:1;min-height:0;display:flex;flex-direction:column;overflow:hidden">
-              <div class="zella-card-hd">
-                <span class="zella-card-title">เรดาร์ประสิทธิภาพ</span>
-                <span class="info-i" data-tip="6 แกน: Win Rate, Profit Factor, Avg R:R, Recovery Factor, Max Drawdown, Consistency">i</span>
-              </div>
-              <div class="radar-wrap" style="flex:1;min-height:0;display:flex;flex-direction:column;justify-content:center">
-                <div class="radar-canvas-wrap">
-                  <canvas id="radarChart"></canvas>
-                </div>
-              </div>
-            </div>
-            <!-- Cumulative P&L card -->
-            <div class="card cum-card">
-              <div class="card-hd" style="padding:8px 14px">
-                <span class="card-title" style="font-size:12px">กำไร/ขาดทุนสุทธิสะสมรายวัน</span>
-                <span class="info-i" data-tip="กำไร/ขาดทุนสะสมรายวัน (Equity Curve)">i</span>
-              </div>
-              <div class="cum-canvas-wrap"><canvas id="cumChart"></canvas></div>
-            </div>
-          </div>
         </div>
 
       </div>
@@ -645,7 +626,8 @@ body{font-family:'Mitr',-apple-system,sans-serif;background:var(--bg);color:var(
             <div class="jnl-hd">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
               <div class="jnl-title">สรุปรีวิวหลังสิ้นวัน</div>
-              <span style="font-size:11px;color:var(--text3);margin-left:auto" id="jnl-save-status">บันทึกแล้ว</span>
+              <input type="date" id="jnl-date" style="margin-left:auto;background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:3px 8px;font-size:11px;color:var(--text2);font-family:inherit;outline:none;cursor:pointer" onchange="switchJournalDate(this.value)">
+              <span style="font-size:11px;color:var(--text3);margin-left:8px" id="jnl-save-status">บันทึกแล้ว</span>
             </div>
             <textarea class="jnl-textarea" id="jnl-eod" placeholder="วันนี้ทำอะไรได้ดีบ้าง? มีอะไรที่ต้องปรับปรุง? บทเรียนที่ได้รับจากตลาดวันนี้..." oninput="saveJournal()" style="min-height:420px"></textarea>
           </div>
@@ -761,7 +743,21 @@ body{font-family:'Mitr',-apple-system,sans-serif;background:var(--bg);color:var(
                 <option value="JPY">JPY (¥)</option>
               </select>
             </div>
+            <button class="btn btn-red" onclick="clearAllData()" style="margin-top:18px;width:100%">ล้างข้อมูลทั้งหมด</button>
           </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ ACCOUNTS ══ -->
+    <div id="panel-accounts" class="tab-panel">
+      <div style="max-width:560px">
+        <div class="card" style="margin-bottom:14px">
+          <div class="card-hd" style="display:flex;align-items:center;justify-content:space-between">
+            <span class="card-title">บัญชีและกลยุทธ์</span>
+            <button class="btn" onclick="openNewAccountModal()" style="font-size:12px;padding:6px 14px">+ บัญชีใหม่</button>
+          </div>
+          <div class="card-bd" id="accounts-list"></div>
         </div>
       </div>
     </div>
@@ -778,6 +774,46 @@ body{font-family:'Mitr',-apple-system,sans-serif;background:var(--bg);color:var(
       <button class="modal-close" onclick="closeDayModal()">✕</button>
     </div>
     <div class="modal-bd" id="day-body"></div>
+  </div>
+</div>
+
+<!-- ═══ ACCOUNT MODAL ═══ -->
+<div class="overlay" id="acct-overlay" onclick="if(event.target===this)closeAccountModal()">
+  <div class="modal" style="width:420px">
+    <div class="modal-hd">
+      <div class="modal-title" id="acct-modal-title">สร้างบัญชีใหม่</div>
+      <button class="modal-close" onclick="closeAccountModal()">✕</button>
+    </div>
+    <div class="modal-bd">
+      <div class="form-group" style="margin-bottom:12px">
+        <label class="form-label">ชื่อบัญชี *</label>
+        <input class="form-input" id="acct-name" placeholder="เช่น บัญชีหลัก, Prop Firm A">
+      </div>
+      <div class="form-group" style="margin-bottom:12px">
+        <label class="form-label">เงินทุนเริ่มต้น</label>
+        <input class="form-input" id="acct-balance" type="number" placeholder="10000">
+      </div>
+      <div class="form-group" style="margin-bottom:12px">
+        <label class="form-label">สกุลเงิน</label>
+        <select class="form-input" id="acct-currency">
+          <option value="THB">THB (฿)</option>
+          <option value="USD" selected>USD ($)</option>
+          <option value="USC">USC (¢)</option>
+          <option value="EUR">EUR (€)</option>
+          <option value="GBP">GBP (£)</option>
+          <option value="JPY">JPY (¥)</option>
+        </select>
+      </div>
+      <div class="form-group" style="margin-bottom:12px">
+        <label class="form-label">ชื่อระบบเทรด</label>
+        <input class="form-input" id="acct-strategy" placeholder="เช่น ICT Model 3">
+      </div>
+      <div id="acct-err" style="color:var(--red);font-size:12px;margin-bottom:8px;display:none"></div>
+      <div style="display:flex;gap:8px;justify-content:flex-end">
+        <button class="btn btn-ghost" onclick="closeAccountModal()">ยกเลิก</button>
+        <button class="btn" onclick="saveAccountModal()">บันทึก</button>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -861,14 +897,26 @@ body{font-family:'Mitr',-apple-system,sans-serif;background:var(--bg);color:var(
 
 <script>
 /* ═══ STATE ═══ */
-let trades = JSON.parse(localStorage.getItem('dosho_trades') || '[]');
-let journal = JSON.parse(localStorage.getItem('dosho_journal') || '{}');
+let accounts = JSON.parse(localStorage.getItem('dosho_accounts') || 'null') || [{id:'default',name:'บัญชีหลัก',balance:10000,currency:'USD',strategy:'ระบบเทรด'}];
+let activeAccountId = localStorage.getItem('dosho_active_account') || 'default';
+if(!accounts.find(a=>a.id===activeAccountId)) activeAccountId = accounts[0].id;
+
+function acctKey(base, id) {
+  const aid = id || activeAccountId;
+  return aid === 'default' ? base : base + '_' + aid;
+}
+
+let trades = JSON.parse(localStorage.getItem(acctKey('dosho_trades')) || '[]');
+let journal = JSON.parse(localStorage.getItem(acctKey('dosho_journal')) || '{}');
 let settings = JSON.parse(localStorage.getItem('dosho_settings') || '{"name":"Trader","balance":10000,"strategy":"ระบบเทรด","currency":"USD"}');
-let checklist = JSON.parse(localStorage.getItem('dosho_checklist') || '{"entry":[],"exit":[]}');
+// sync settings from active account
+(function(){const a=accounts.find(x=>x.id===activeAccountId);if(a){settings.balance=a.balance;settings.currency=a.currency;settings.strategy=a.strategy;}})();
+let checklist = JSON.parse(localStorage.getItem(acctKey('dosho_checklist')) || '{"entry":[],"exit":[]}');
 let activeFilter = 'all';
 let editId = null;
 let calYear, calMonth;
-let cumChartInst = null, rptChartInst = null;
+let activeJournalDate = new Date().toISOString().slice(0,10);
+let rptChartInst = null;
 
 /* ═══ HELPERS ═══ */
 function getCurrencySymbol() {
@@ -885,6 +933,7 @@ function init() {
   loadSettings();
   loadJournal();
   loadChecklist();
+  renderTags();
   renderDashboard();
   renderCalendar();
   renderTradeTable();
@@ -1016,7 +1065,7 @@ function deleteTrade(id) {
   renderReports();
 }
 
-function persist() { localStorage.setItem('dosho_trades', JSON.stringify(trades)); }
+function persist() { localStorage.setItem(acctKey('dosho_trades'), JSON.stringify(trades)); }
 
 /* ═══ STATS HELPERS ═══ */
 function calcStats(ts) {
@@ -1068,15 +1117,13 @@ function calcStats(ts) {
 }
 
 /* ═══ DASHBOARD ═══ */
-let radarChartInst = null;
-
 function renderDashboard() {
   const s = calcStats(trades);
 
   const fmt = (v, pos) => {
     if(v === null || v === undefined) return '—';
     const abs = Math.abs(v);
-    const str = abs >= 1000 ? getCurrencySymbol()+abs.toLocaleString('th-TH',{minimumFractionDigits:2,maximumFractionDigits:2}) : getCurrencySymbol()+abs.toFixed(2);
+    const str = abs >= 1000 ? abs.toLocaleString('th-TH',{minimumFractionDigits:2,maximumFractionDigits:2})+getCurrencySymbol() : abs.toFixed(2)+getCurrencySymbol();
     return (v < 0 ? '−' : (pos ? '+' : '')) + str;
   };
 
@@ -1125,41 +1172,8 @@ function renderDashboard() {
     const winFrac = s.avgWin + s.avgLoss > 0 ? s.avgWin / (s.avgWin + s.avgLoss) * 100 : 50;
     document.getElementById('kpi-rr-bar').style.width = winFrac + '%';
     document.getElementById('kpi-rr-bar-loss').style.width = (100 - winFrac) + '%';
-    document.getElementById('kpi-rr-win').textContent = s.avgWin > 0 ? getCurrencySymbol()+s.avgWin.toFixed(0) : '—';
-    document.getElementById('kpi-rr-loss').textContent = s.avgLoss > 0 ? '-'+getCurrencySymbol()+s.avgLoss.toFixed(0) : '—';
-
-    // Radar sub-scores (0–100 each)
-    const wrScore = Math.min(s.wr, 100);
-    const pfScore = Math.min((s.pf||0) / 5 * 100, 100);
-    const rrScore = rr !== null ? Math.min(rr / 3 * 100, 100) : 0;
-
-    const dayPnls = {};
-    trades.forEach(t => {
-      if(!t.openDt) return;
-      const k = t.openDt.slice(0,10);
-      dayPnls[k] = (dayPnls[k] || 0) + t.pnl;
-    });
-    const positiveDayPnls = Object.values(dayPnls).filter(v => v > 0);
-    const bestDay = positiveDayPnls.length ? Math.max(...positiveDayPnls) : 0;
-    let consistScore = 0;
-    if(s.netPnl > 0 && bestDay > 0) {
-      consistScore = Math.max(0, Math.min(100, (1 - bestDay / s.netPnl) * 100));
-    }
-
-    const closed = trades.filter(t => t.closeDt || t.openDt)
-      .sort((a,b) => new Date(a.closeDt || a.openDt) - new Date(b.closeDt || b.openDt));
-    let eq = 0, peak = 0, maxDD = 0;
-    for(const t of closed) {
-      eq += t.pnl;
-      if(eq > peak) peak = eq;
-      if(peak - eq > maxDD) maxDD = peak - eq;
-    }
-    const recoveryFactor = maxDD > 0 ? s.netPnl / maxDD : (s.netPnl > 0 ? 10 : 0);
-    const recovScore = Math.max(0, Math.min(100, recoveryFactor / 5 * 100));
-    const ddPctOfPeak = peak > 0 ? maxDD / peak : 0;
-    const ddScore = Math.max(0, Math.min(100, (1 - ddPctOfPeak) * 100));
-
-    renderRadarChart([wrScore, pfScore, rrScore, recovScore, ddScore, consistScore]);
+    document.getElementById('kpi-rr-win').textContent = s.avgWin > 0 ? s.avgWin.toFixed(0)+getCurrencySymbol() : '—';
+    document.getElementById('kpi-rr-loss').textContent = s.avgLoss > 0 ? '-'+s.avgLoss.toFixed(0)+getCurrencySymbol() : '—';
   } else {
     ['kpi-pnl','kpi-pf','kpi-wr','kpi-rr'].forEach(id => {
       const el = document.getElementById(id);
@@ -1168,61 +1182,9 @@ function renderDashboard() {
     });
     document.getElementById('wr-count-w').textContent = '—';
     document.getElementById('wr-count-l').textContent = '—';
-    renderRadarChart([0,0,0,0,0,0]);
   }
 
-  renderCumChart();
   renderRecentTrades();
-}
-
-function renderRadarChart(data) {
-  if(radarChartInst) { radarChartInst.destroy(); radarChartInst = null; }
-  const ctx = document.getElementById('radarChart').getContext('2d');
-  radarChartInst = new Chart(ctx, {
-    type: 'radar',
-    data: {
-      labels: ['Win Rate', 'Profit Factor', 'Avg R:R', 'Recovery', 'Drawdown', 'Consistency'],
-      datasets: [{
-        data,
-        backgroundColor: 'rgba(79, 70, 229, 0.12)',
-        borderColor: '#4F46E5',
-        borderWidth: 2,
-        pointBackgroundColor: '#4F46E5',
-        pointBorderColor: '#fff',
-        pointBorderWidth: 1.5,
-        pointRadius: 4,
-        pointHoverRadius: 6,
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      scales: {
-        r: {
-          min: 0, max: 100,
-          ticks: { display: false, stepSize: 25, backdropColor: 'transparent' },
-          grid: { color: 'rgba(40, 44, 103, 0.07)', lineWidth: 1 },
-          angleLines: { color: 'rgba(40, 44, 103, 0.1)', lineWidth: 1 },
-          pointLabels: {
-            color: ctx => {
-              const colors = ['#059669','#3e45b8','#d97706','#7c3aed','#dc2626','#0891b2'];
-              return colors[ctx.index] || '#475569';
-            },
-            font: ctx => ({ size: 11, weight: '700', family: 'Mitr' }),
-            padding: 10,
-            backdropColor: 'transparent',
-          }
-        }
-      },
-      plugins: {
-        legend: { display: false },
-        tooltip: {
-          backgroundColor: '#1e2240', titleColor: '#CBD5E1', bodyColor: '#FFFFFF',
-          callbacks: { label: i => i.raw.toFixed(1) }
-        }
-      }
-    }
-  });
 }
 
 /* ═══ RECENT TRADES MINI ═══ */
@@ -1236,7 +1198,7 @@ function renderRecentTrades() {
   }
   el.innerHTML = recent.map(t => {
     const pnlColor = t.pnl >= 0 ? 'var(--green)' : 'var(--red)';
-    const pnlStr = (t.pnl >= 0 ? '+' : '−') + getCurrencySymbol() + Math.abs(t.pnl).toLocaleString('th-TH', {minimumFractionDigits:0, maximumFractionDigits:0});
+    const pnlStr = (t.pnl >= 0 ? '+' : '−') + Math.abs(t.pnl).toLocaleString('th-TH', {minimumFractionDigits:0, maximumFractionDigits:0}) + getCurrencySymbol();
     const dateStr = t.openDt ? new Date(t.openDt).toLocaleDateString('th-TH', {month:'short', day:'numeric'}) : '—';
     return `<div class="rtrade-row">
       <span class="rtrade-sym">${t.symbol}</span>
@@ -1252,10 +1214,12 @@ function updateSidebar() {
   const s = calcStats(trades);
   const base = parseFloat(settings.balance) || 0;
   const bal = base + (s ? s.netPnl : 0);
-  document.getElementById('sb-name').textContent = settings.name || 'บัญชีของฉัน';
-  document.getElementById('sb-bal').textContent = getCurrencySymbol() + bal.toLocaleString('th-TH',{minimumFractionDigits:2,maximumFractionDigits:2});
-  const init = (settings.name || 'T').charAt(0).toUpperCase();
-  document.getElementById('sb-avatar').textContent = init;
+  const acct = accounts.find(x => x.id === activeAccountId);
+  const displayName = accounts.length > 1 ? (acct ? acct.name : settings.name || 'บัญชีของฉัน') : (settings.name || 'บัญชีของฉัน');
+  document.getElementById('sb-name').textContent = displayName;
+  document.getElementById('sb-bal').textContent = bal.toLocaleString('th-TH',{minimumFractionDigits:2,maximumFractionDigits:2}) + getCurrencySymbol();
+  const avatarInit = (displayName || 'T').charAt(0).toUpperCase();
+  document.getElementById('sb-avatar').textContent = avatarInit;
 }
 
 /* ═══ CALENDAR ═══ */
@@ -1340,8 +1304,9 @@ function renderCalendar() {
     const wkPnl = wkDays.reduce((s,d) => s + dayMap[d].pnl, 0);
     const row = document.createElement('div');
     row.className = 'wk-row';
+    if(wkDays.length > 0) { row.style.cursor = 'pointer'; row.onclick = () => openWeekModal(wi, week, dayMap); }
     const cls = wkPnl > 0 ? 'g' : wkPnl < 0 ? 'r' : 'z';
-    const pnlStr = wkDays.length > 0 ? (wkPnl>=0?'+':'')+fmtMoneyK(wkPnl) : '$0';
+    const pnlStr = wkDays.length > 0 ? (wkPnl>=0?'+':'')+fmtMoneyK(wkPnl) : '0'+getCurrencySymbol();
     row.innerHTML = `<div class="wk-lbl">สัปดาห์ที่ ${wi+1}</div>
       <div class="wk-pnl ${cls}">${pnlStr}</div>
       <div class="wk-days">${wkDays.length} วัน</div>`;
@@ -1351,58 +1316,14 @@ function renderCalendar() {
 
 function fmtMoney(v) {
   const abs = Math.abs(v);
-  if(abs >= 1000) return getCurrencySymbol() + (Math.abs(v)/1000).toFixed(abs>=10000?1:2)+'K';
-  return getCurrencySymbol() + abs.toFixed(abs < 10 ? 2 : 0);
+  if(abs >= 1000) return (Math.abs(v)/1000).toFixed(abs>=10000?1:2)+'K'+getCurrencySymbol();
+  return abs.toFixed(abs < 10 ? 2 : 0)+getCurrencySymbol();
 }
 function fmtMoneyK(v) {
   const abs = Math.abs(v);
   const sign = v < 0 ? '-' : '';
-  if(abs >= 1000) return sign+getCurrencySymbol()+(abs/1000).toFixed(1)+'K';
-  return sign+getCurrencySymbol()+abs.toFixed(0);
-}
-
-/* ═══ CUMULATIVE CHART ═══ */
-function renderCumChart() {
-  if(cumChartInst) { cumChartInst.destroy(); cumChartInst = null; }
-  const ctx = document.getElementById('cumChart').getContext('2d');
-  if(!trades.length) return;
-
-  const sorted = [...trades].sort((a,b) => new Date(a.openDt)-new Date(b.openDt));
-  let cum = 0;
-  const labels = sorted.map(t => {
-    const d = new Date(t.openDt);
-    return `${d.getDate()}/${d.getMonth()+1}`;
-  });
-  const data = sorted.map(t => { cum += t.pnl; return +cum.toFixed(2); });
-
-  const isPos = cum >= 0;
-  const color = isPos ? '#059669' : '#dc2626';
-  cumChartInst = new Chart(ctx, {
-    type:'line',
-    data:{
-      labels,
-      datasets:[{
-        data,borderColor:color,borderWidth:2,fill:true,
-        backgroundColor:(c)=>{
-          const g = c.chart.ctx.createLinearGradient(0,0,0,130);
-          g.addColorStop(0, isPos?'rgba(5,150,105,.22)':'rgba(220,38,38,.22)');
-          g.addColorStop(1, isPos?'rgba(5,150,105,.02)':'rgba(220,38,38,.02)');
-          return g;
-        },
-        pointRadius:0,tension:.4
-      }]
-    },
-    options:{
-      responsive:true,maintainAspectRatio:false,
-      plugins:{legend:{display:false},tooltip:{mode:'index',intersect:false,
-        backgroundColor:'#282C67',titleColor:'#CBD5E1',bodyColor:'#FFFFFF',
-        callbacks:{label:i=>getCurrencySymbol()+i.raw.toLocaleString('th-TH')}}},
-      scales:{
-        x:{grid:{color:'rgba(40, 44, 103, 0.05)'},ticks:{color:'#64748B',font:{size:10},maxTicksLimit:6}},
-        y:{grid:{color:'rgba(40, 44, 103, 0.05)'},ticks:{color:'#64748B',font:{size:10},callback:v=>getCurrencySymbol()+v.toLocaleString('th-TH')}}
-      }
-    }
-  });
+  if(abs >= 1000) return sign+(abs/1000).toFixed(1)+'K'+getCurrencySymbol();
+  return sign+abs.toFixed(0)+getCurrencySymbol();
 }
 
 /* ═══ TRADE TABLE ═══ */
@@ -1438,8 +1359,8 @@ function renderTradeTable() {
     const dateStr = t.openDt ? new Date(t.openDt).toLocaleString('th-TH',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}) : '—';
     const pnlCls = t.pnl >= 0 ? 'pnl-p' : 'pnl-n';
     const rowCls = t.pnl >= 0 ? 'tr-win' : 'tr-loss';
-    const pnlStr = (t.pnl>=0?'+':'') + getCurrencySymbol() + Math.abs(t.pnl).toLocaleString('th-TH',{minimumFractionDigits:2,maximumFractionDigits:2});
-    return `<tr class="${rowCls}">
+    const pnlStr = (t.pnl>=0?'+':'') + Math.abs(t.pnl).toLocaleString('th-TH',{minimumFractionDigits:2,maximumFractionDigits:2}) + getCurrencySymbol();
+    return `<tr class="${rowCls}" style="cursor:pointer" onclick="openTradeDetail('${t.id}')">
       <td><span class="sym">${t.symbol}</span>${t.tag?` <span style="margin-left:6px; display:inline-flex; gap:4px">${renderTradeTags(t.tag)}</span>`:''}
       </td>
       <td><span class="ttype ${t.direction==='BUY'?'b':'s'}">${t.direction}</span></td>
@@ -1451,8 +1372,8 @@ function renderTradeTable() {
       <td style="max-width:180px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--text3)">${t.notes || '—'}</td>
       <td>
         <div class="td-actions">
-          <button class="act-btn" onclick="openModal('${t.id}')" title="แก้ไข">✎</button>
-          <button class="act-btn del" onclick="deleteTrade('${t.id}')" title="ลบ">✕</button>
+          <button class="act-btn" onclick="event.stopPropagation();openModal('${t.id}')" title="แก้ไข">✎</button>
+          <button class="act-btn del" onclick="event.stopPropagation();deleteTrade('${t.id}')" title="ลบ">✕</button>
         </div>
       </td>
     </tr>`;
@@ -1462,8 +1383,8 @@ function renderTradeTable() {
 /* ═══ REPORTS ═══ */
 function renderReports() {
   const s = calcStats(trades);
-  const fmt = v => v !== null && v !== undefined ? (v>=0?'+':'') + getCurrencySymbol() + Math.abs(v).toLocaleString('th-TH',{minimumFractionDigits:2,maximumFractionDigits:2}) : '—';
-  const fmtPlain = v => v !== null && v !== undefined ? getCurrencySymbol() + Math.abs(v).toLocaleString('th-TH',{minimumFractionDigits:2,maximumFractionDigits:2}) : '—';
+  const fmt = v => v !== null && v !== undefined ? (v>=0?'+':'') + Math.abs(v).toLocaleString('th-TH',{minimumFractionDigits:2,maximumFractionDigits:2}) + getCurrencySymbol() : '—';
+  const fmtPlain = v => v !== null && v !== undefined ? Math.abs(v).toLocaleString('th-TH',{minimumFractionDigits:2,maximumFractionDigits:2}) + getCurrencySymbol() : '—';
   const dash = '—';
 
   document.getElementById('r-trades').textContent = trades.length || dash;
@@ -1471,8 +1392,8 @@ function renderReports() {
   document.getElementById('r-pnl').className = 'rpt-stat-val ' + (s && s.netPnl >= 0 ? 'green' : s ? 'red' : '');
   document.getElementById('r-wr').textContent = s ? s.wr.toFixed(1)+'%' : dash;
   document.getElementById('r-pf').textContent = s ? (s.pf===Infinity?'∞':s.pf!==null?s.pf.toFixed(2):dash) : dash;
-  document.getElementById('r-avgwin').textContent = s && s.wins.length ? getCurrencySymbol()+s.avgWin.toFixed(2) : dash;
-  document.getElementById('r-avgloss').textContent = s && s.losses.length ? getCurrencySymbol()+s.avgLoss.toFixed(2) : dash;
+  document.getElementById('r-avgwin').textContent = s && s.wins.length ? s.avgWin.toFixed(2)+getCurrencySymbol() : dash;
+  document.getElementById('r-avgloss').textContent = s && s.losses.length ? s.avgLoss.toFixed(2)+getCurrencySymbol() : dash;
   document.getElementById('r-best').textContent = s ? fmt(s.best) : dash;
   document.getElementById('r-worst').textContent = s ? fmt(s.worst) : dash;
   document.getElementById('r-streak').textContent = s ? s.maxW + ' รายการ' : dash;
@@ -1502,7 +1423,7 @@ function renderReports() {
       <div style="display:flex;justify-content:space-between;align-items:center;font-size:12px;margin-bottom:5px">
         <span style="font-weight:500;color:var(--text);display:flex;align-items:center;gap:5px">${sym}<span style="font-size:10px;color:var(--text3);font-weight:400">↗ ดูรายการเทรด</span></span>
         <span style="color:var(--text2)">${d.count} รายการ &nbsp;·&nbsp; ${wr}% WR</span>
-        <span style="font-weight:500;color:${isPos?'var(--green)':'var(--red)'}">${isPos?'+':''}${getCurrencySymbol()}${Math.abs(d.pnl).toFixed(2)}</span>
+        <span style="font-weight:500;color:${isPos?'var(--green)':'var(--red)'}">${isPos?'+':''}${Math.abs(d.pnl).toFixed(2)}${getCurrencySymbol()}</span>
       </div>
       <div style="height:5px;background:var(--surface3);border-radius:3px">
         <div style="height:100%;width:${pct}%;background:${isPos?'var(--green)':'var(--red)'};border-radius:3px"></div>
@@ -1529,23 +1450,40 @@ function renderReports() {
         backgroundColor:(c)=>{const g=c.chart.ctx.createLinearGradient(0,0,0,200);g.addColorStop(0,isPos?'rgba(5,150,105,.2)':'rgba(220,38,38,.2)');g.addColorStop(1,'rgba(0,0,0,0)');return g;},
         pointRadius:0,tension:.4}]},
       options:{responsive:true,maintainAspectRatio:false,
-        plugins:{legend:{display:false},tooltip:{mode:'index',intersect:false,backgroundColor:'#282C67',titleColor:'#CBD5E1',bodyColor:'#FFFFFF',callbacks:{label:i=>getCurrencySymbol()+i.raw.toLocaleString('th-TH')}}},
-        scales:{x:{grid:{color:'rgba(40, 44, 103, 0.05)'},ticks:{color:'#64748B',font:{size:10},maxTicksLimit:8}},y:{grid:{color:'rgba(40, 44, 103, 0.05)'},ticks:{color:'#64748B',font:{size:10},callback:v=>getCurrencySymbol()+v.toLocaleString('th-TH')}}}}
+        plugins:{legend:{display:false},tooltip:{mode:'index',intersect:false,backgroundColor:'#282C67',titleColor:'#CBD5E1',bodyColor:'#FFFFFF',callbacks:{label:i=>i.raw.toLocaleString('th-TH')+getCurrencySymbol()}}},
+        scales:{x:{grid:{color:'rgba(40, 44, 103, 0.05)'},ticks:{color:'#64748B',font:{size:10},maxTicksLimit:8}},y:{grid:{color:'rgba(40, 44, 103, 0.05)'},ticks:{color:'#64748B',font:{size:10},callback:v=>v.toLocaleString('th-TH')+getCurrencySymbol()}}}}
     });
   }
 }
 
 /* ═══ JOURNAL ═══ */
 function saveJournal() {
-  journal.eod = document.getElementById('jnl-eod').value;
-  localStorage.setItem('dosho_journal', JSON.stringify(journal));
+  const val = document.getElementById('jnl-eod').value;
+  if(!journal[activeJournalDate]) journal[activeJournalDate] = {};
+  journal[activeJournalDate].eod = val;
+  localStorage.setItem(acctKey('dosho_journal'), JSON.stringify(journal));
   const st = document.getElementById('jnl-save-status');
   st.textContent = 'กำลังบันทึก…';
   clearTimeout(saveJournal._t);
   saveJournal._t = setTimeout(() => { st.textContent = 'บันทึกแล้ว'; }, 600);
 }
 function loadJournal() {
-  document.getElementById('jnl-eod').value = journal.eod || '';
+  const dateInput = document.getElementById('jnl-date');
+  if(dateInput) dateInput.value = activeJournalDate;
+  // migrate legacy flat eod
+  if(typeof journal.eod === 'string' && journal.eod) {
+    const today = new Date().toISOString().slice(0,10);
+    journal[today] = { eod: journal.eod };
+    delete journal.eod;
+    localStorage.setItem(acctKey('dosho_journal'), JSON.stringify(journal));
+  }
+  document.getElementById('jnl-eod').value = (journal[activeJournalDate] && journal[activeJournalDate].eod) || '';
+}
+function switchJournalDate(date) {
+  saveJournal();
+  activeJournalDate = date;
+  document.getElementById('jnl-eod').value = (journal[activeJournalDate] && journal[activeJournalDate].eod) || '';
+  document.getElementById('jnl-save-status').textContent = 'บันทึกแล้ว';
 }
 function jnlFormat(cmd) { document.execCommand(cmd); }
 
@@ -1573,7 +1511,7 @@ function deleteRule(section, idx) {
   renderChecklist();
 }
 
-function saveChecklist() { localStorage.setItem('dosho_checklist', JSON.stringify(checklist)); }
+function saveChecklist() { localStorage.setItem(acctKey('dosho_checklist'), JSON.stringify(checklist)); }
 
 function renderChecklist() {
   const total = checklist.entry.length + checklist.exit.length;
@@ -1625,6 +1563,8 @@ function editStratName() {
     const val = input.value.trim() || current;
     settings.strategy = val;
     localStorage.setItem('dosho_settings', JSON.stringify(settings));
+    const a = accounts.find(x => x.id === activeAccountId);
+    if(a) { a.strategy = val; persistAccounts(); }
     restore(val);
     document.getElementById('strat-frac') && renderChecklist();
   };
@@ -1646,7 +1586,7 @@ const _defaultTagPool = [
 
 let defaultTags = [];
 try {
-  const stored = localStorage.getItem('dosho_tag_pool');
+  const stored = localStorage.getItem(acctKey('dosho_tag_pool'));
   if (stored) {
     const parsed = JSON.parse(stored);
     if (Array.isArray(parsed)) {
@@ -1668,15 +1608,16 @@ try {
 }
 
 // Make sure the quick-tags are in the defaultTags list
-['FVG', 'OB', 'BOS', 'ChoCh'].forEach(qt => {
-  if (!defaultTags.includes(qt)) {
-    defaultTags.unshift(qt);
-  }
-});
+function ensureQuickTags() {
+  ['FVG', 'OB', 'BOS', 'ChoCh'].forEach(qt => {
+    if (!defaultTags.includes(qt)) defaultTags.unshift(qt);
+  });
+}
+ensureQuickTags();
 
 let selectedTags = [];
 try {
-  const stored = localStorage.getItem('dosho_tags');
+  const stored = localStorage.getItem(acctKey('dosho_tags'));
   if (stored) {
     const parsed = JSON.parse(stored);
     if (Array.isArray(parsed)) {
@@ -1691,8 +1632,8 @@ try {
   selectedTags = [];
 }
 
-function saveTagPool() { localStorage.setItem('dosho_tag_pool', JSON.stringify(defaultTags)); }
-function saveTags() { localStorage.setItem('dosho_tags', JSON.stringify(selectedTags)); }
+function saveTagPool() { localStorage.setItem(acctKey('dosho_tag_pool'), JSON.stringify(defaultTags)); }
+function saveTags() { localStorage.setItem(acctKey('dosho_tags'), JSON.stringify(selectedTags)); }
 
 // Hashing function to get stable colors for tags
 function getTagColor(name) {
@@ -1943,6 +1884,8 @@ function saveSettings() {
   settings.strategy = document.getElementById('set-strategy').value;
   settings.currency = document.getElementById('set-currency').value;
   localStorage.setItem('dosho_settings', JSON.stringify(settings));
+  const a = accounts.find(x => x.id === activeAccountId);
+  if(a) { a.balance = settings.balance; a.currency = settings.currency; a.strategy = settings.strategy; persistAccounts(); }
   document.getElementById('lbl-set-balance').textContent = 'เงินทุนเริ่มต้น (' + getCurrencySymbol() + ')';
   document.getElementById('lbl-f-pnl').textContent = 'กำไร/ขาดทุนสุทธิ (' + getCurrencySymbol() + ') *';
   updateSidebar();
@@ -1952,9 +1895,10 @@ function saveSettings() {
   }
 }
 function clearAllData() {
-  if(!confirm('คุณต้องการลบข้อมูลการเทรดและบันทึกทั้งหมดใช่หรือไม่? การดำเนินการนี้ไม่สามารถย้อนกลับได้')) return;
-  localStorage.clear();
-  localStorage.setItem('dosho_seeded', '1'); // prevent demo data from reloading on next refresh
+  if(!confirm('คุณต้องการลบข้อมูลการเทรดและบันทึกทั้งหมดในบัญชีนี้ใช่หรือไม่? การดำเนินการนี้ไม่สามารถย้อนกลับได้')) return;
+  ['dosho_trades','dosho_journal','dosho_checklist','dosho_tag_pool','dosho_tags'].forEach(base => {
+    localStorage.removeItem(acctKey(base));
+  });
   trades = []; journal = {}; checklist = {entry:[],exit:[]}; selectedTags = []; defaultTags = [..._defaultTagPool];
   renderDashboard(); renderCalendar(); renderTradeTable(); renderReports(); loadJournal(); renderChecklist(); renderTags();
 }
@@ -1973,7 +1917,7 @@ function openDayModal(dateStr) {
   const losses = dayTrades.filter(t => t.pnl < 0).length;
   const wr = dayTrades.length ? (wins/dayTrades.length*100).toFixed(1) : 0;
   const pnlCls = dayPnl >= 0 ? 'var(--green)' : 'var(--red)';
-  const pnlStr = (dayPnl >= 0 ? '+' : '−') + getCurrencySymbol() + Math.abs(dayPnl).toLocaleString('th-TH',{minimumFractionDigits:2,maximumFractionDigits:2});
+  const pnlStr = (dayPnl >= 0 ? '+' : '−') + Math.abs(dayPnl).toLocaleString('th-TH',{minimumFractionDigits:2,maximumFractionDigits:2}) + getCurrencySymbol();
 
   document.getElementById('day-title').textContent = niceDate;
   document.getElementById('day-body').innerHTML = `
@@ -1999,7 +1943,7 @@ function openDayModal(dateStr) {
         ${dayTrades.map(t => {
           const tm = new Date(t.openDt).toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'});
           const pc = t.pnl >= 0 ? 'pnl-p' : 'pnl-n';
-          const ps = (t.pnl>=0?'+':'-') + getCurrencySymbol() + Math.abs(t.pnl).toLocaleString('th-TH',{minimumFractionDigits:2,maximumFractionDigits:2});
+          const ps = (t.pnl>=0?'+':'-') + Math.abs(t.pnl).toLocaleString('th-TH',{minimumFractionDigits:2,maximumFractionDigits:2}) + getCurrencySymbol();
           return `<tr>
             <td><span class="sym">${t.symbol}</span></td>
             <td><span class="ttype ${t.direction==='BUY'?'b':'s'}">${t.direction}</span></td>
@@ -2037,7 +1981,7 @@ function openSymbolModal(sym) {
   const netPnl = symTrades.reduce((s,t) => s+t.pnl, 0);
   const wr = (wins.length / symTrades.length * 100).toFixed(1);
   const pnlColor = netPnl >= 0 ? 'var(--green)' : 'var(--red)';
-  const pnlStr = (netPnl >= 0 ? '+' : '−') + getCurrencySymbol() + Math.abs(netPnl).toLocaleString('th-TH',{minimumFractionDigits:2,maximumFractionDigits:2});
+  const pnlStr = (netPnl >= 0 ? '+' : '−') + Math.abs(netPnl).toLocaleString('th-TH',{minimumFractionDigits:2,maximumFractionDigits:2}) + getCurrencySymbol();
 
   document.getElementById('day-title').textContent = sym + ' — ประวัติการเทรด';
   document.getElementById('day-body').innerHTML = `
@@ -2063,7 +2007,7 @@ function openSymbolModal(sym) {
         ${symTrades.map(t => {
           const dateStr = t.openDt ? new Date(t.openDt).toLocaleString('th-TH',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}) : '—';
           const pc = t.pnl >= 0 ? 'pnl-p' : 'pnl-n';
-          const ps = (t.pnl>=0?'+':'-') + getCurrencySymbol() + Math.abs(t.pnl).toLocaleString('th-TH',{minimumFractionDigits:2,maximumFractionDigits:2});
+          const ps = (t.pnl>=0?'+':'-') + Math.abs(t.pnl).toLocaleString('th-TH',{minimumFractionDigits:2,maximumFractionDigits:2}) + getCurrencySymbol();
           return `<tr>
             <td><span class="ttype ${t.direction==='BUY'?'b':'s'}">${t.direction}</span></td>
             <td>${dateStr}</td>
@@ -2073,6 +2017,105 @@ function openSymbolModal(sym) {
             <td class="${pc}">${ps}</td>
             <td style="font-size:11px">${t.tag ? `<span style="display:inline-flex; gap:4px">${renderTradeTags(t.tag)}</span>` : '—'}</td>
             <td style="max-width:160px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--text3);font-size:11px">${t.notes || '—'}</td>
+          </tr>`;
+        }).join('')}
+      </tbody>
+    </table>
+  `;
+  document.getElementById('day-overlay').classList.add('open');
+}
+
+/* ═══ TRADE DETAIL ═══ */
+function openTradeDetail(id) {
+  const t = trades.find(x => x.id === id);
+  if(!t) return;
+  const dateStr = t.openDt ? new Date(t.openDt).toLocaleString('th-TH',{weekday:'short',year:'numeric',month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}) : '—';
+  const pnlCls = t.pnl >= 0 ? 'var(--green)' : 'var(--red)';
+  const pnlStr = (t.pnl >= 0 ? '+' : '−') + Math.abs(t.pnl).toLocaleString('th-TH',{minimumFractionDigits:2,maximumFractionDigits:2}) + getCurrencySymbol();
+  document.getElementById('day-title').textContent = t.symbol + ' — รายละเอียดการเทรด';
+  document.getElementById('day-body').innerHTML = `
+    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:14px">
+      <div style="background:var(--surface2);padding:10px 12px;border-radius:8px">
+        <div style="font-size:10px;color:var(--text3);margin-bottom:3px">กำไร/ขาดทุนสุทธิ</div>
+        <div style="font-size:22px;font-weight:500;color:${pnlCls}">${pnlStr}</div>
+      </div>
+      <div style="background:var(--surface2);padding:10px 12px;border-radius:8px">
+        <div style="font-size:10px;color:var(--text3);margin-bottom:3px">ทิศทาง</div>
+        <div style="font-size:18px;font-weight:500"><span class="ttype ${t.direction==='BUY'?'b':'s'}" style="font-size:14px">${t.direction}</span></div>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px">
+      <div style="background:var(--surface2);padding:10px 12px;border-radius:8px">
+        <div style="font-size:10px;color:var(--text3);margin-bottom:3px">วันเวลาเปิด</div>
+        <div style="font-size:12px;font-weight:500">${dateStr}</div>
+      </div>
+      <div style="background:var(--surface2);padding:10px 12px;border-radius:8px">
+        <div style="font-size:10px;color:var(--text3);margin-bottom:3px">ราคาเปิด / ปิด</div>
+        <div style="font-size:13px;font-weight:500">${t.openPx !== null ? t.openPx.toFixed(2) : '—'} / ${t.closePx !== null ? t.closePx.toFixed(2) : '—'}</div>
+      </div>
+      <div style="background:var(--surface2);padding:10px 12px;border-radius:8px">
+        <div style="font-size:10px;color:var(--text3);margin-bottom:3px">จำนวนสัญญา (Lots)</div>
+        <div style="font-size:13px;font-weight:500">${t.volume !== null ? t.volume : '—'}</div>
+      </div>
+    </div>
+    ${t.tag ? `<div style="margin-bottom:12px"><div style="font-size:11px;font-weight:500;color:var(--text3);margin-bottom:6px">แท็ก</div><div style="display:flex;flex-wrap:wrap;gap:5px">${renderTradeTags(t.tag)}</div></div>` : ''}
+    ${t.notes ? `<div style="background:var(--surface2);border-radius:8px;padding:10px 12px"><div style="font-size:10px;color:var(--text3);margin-bottom:5px">บันทึกเพิ่มเติม</div><div style="font-size:12px;color:var(--text2);line-height:1.6">${t.notes}</div></div>` : ''}
+    <div style="display:flex;gap:8px;margin-top:16px;justify-content:flex-end">
+      <button class="btn btn-ghost" onclick="closeDayModal();openModal('${t.id}')">แก้ไข</button>
+    </div>
+  `;
+  document.getElementById('day-overlay').classList.add('open');
+}
+
+/* ═══ WEEK DETAIL ═══ */
+function openWeekModal(wi, week, dayMap) {
+  const weekTrades = [];
+  week.filter(d => d && dayMap[d]).forEach(d => {
+    const dateStr = `${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    trades.filter(t => t.openDt && t.openDt.slice(0,10) === dateStr)
+      .forEach(t => weekTrades.push(t));
+  });
+  weekTrades.sort((a,b) => new Date(a.openDt) - new Date(b.openDt));
+  const wkPnl = weekTrades.reduce((s,t) => s+t.pnl, 0);
+  const wins = weekTrades.filter(t=>t.pnl>0).length;
+  const losses = weekTrades.filter(t=>t.pnl<0).length;
+  const wr = weekTrades.length ? (wins/weekTrades.length*100).toFixed(1) : 0;
+  const pnlCls = wkPnl >= 0 ? 'var(--green)' : 'var(--red)';
+  const pnlStr = (wkPnl >= 0 ? '+' : '−') + Math.abs(wkPnl).toLocaleString('th-TH',{minimumFractionDigits:2,maximumFractionDigits:2}) + getCurrencySymbol();
+  document.getElementById('day-title').textContent = `สัปดาห์ที่ ${wi+1} — สรุปผลประจำสัปดาห์`;
+  document.getElementById('day-body').innerHTML = `
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px">
+      <div style="background:var(--surface2);padding:10px 12px;border-radius:8px">
+        <div style="font-size:10px;color:var(--text3);margin-bottom:3px">กำไร/ขาดทุนสุทธิ</div>
+        <div style="font-size:18px;font-weight:500;color:${pnlCls}">${pnlStr}</div>
+      </div>
+      <div style="background:var(--surface2);padding:10px 12px;border-radius:8px">
+        <div style="font-size:10px;color:var(--text3);margin-bottom:3px">รายการเทรด</div>
+        <div style="font-size:18px;font-weight:500">${weekTrades.length}</div>
+      </div>
+      <div style="background:var(--surface2);padding:10px 12px;border-radius:8px">
+        <div style="font-size:10px;color:var(--text3);margin-bottom:3px">อัตราการชนะ</div>
+        <div style="font-size:18px;font-weight:500">${wr}% <span style="font-size:11px;color:var(--text3)">(${wins}/${losses})</span></div>
+      </div>
+    </div>
+    <table class="trades-tbl">
+      <thead><tr>
+        <th>สินทรัพย์</th><th>ทิศทาง</th><th>วันที่</th><th>ราคาเปิด</th><th>ราคาปิด</th><th>Lots</th><th>กำไร/ขาดทุน</th><th>แท็ก</th>
+      </tr></thead>
+      <tbody>
+        ${weekTrades.map(t => {
+          const ds = t.openDt ? new Date(t.openDt).toLocaleString('th-TH',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}) : '—';
+          const pc = t.pnl >= 0 ? 'pnl-p' : 'pnl-n';
+          const ps = (t.pnl>=0?'+':'-') + Math.abs(t.pnl).toLocaleString('th-TH',{minimumFractionDigits:2,maximumFractionDigits:2}) + getCurrencySymbol();
+          return `<tr>
+            <td><span class="sym">${t.symbol}</span></td>
+            <td><span class="ttype ${t.direction==='BUY'?'b':'s'}">${t.direction}</span></td>
+            <td>${ds}</td>
+            <td>${t.openPx !== null ? t.openPx.toFixed(2) : '—'}</td>
+            <td>${t.closePx !== null ? t.closePx.toFixed(2) : '—'}</td>
+            <td>${t.volume !== null ? t.volume : '—'}</td>
+            <td class="${pc}">${ps}</td>
+            <td style="font-size:11px">${t.tag ? renderTradeTags(t.tag) : '—'}</td>
           </tr>`;
         }).join('')}
       </tbody>
@@ -2097,7 +2140,7 @@ function goToThisMonth() {
 }
 
 /* ═══ NAV ═══ */
-const panelTitles = {dashboard:'แดชบอร์ด',trades:'บันทึกการเทรด',journal:'สมุดบันทึกประจำวัน',reports:'รายงานสรุปผล',settings:'การตั้งค่า'};
+const panelTitles = {dashboard:'แดชบอร์ด',trades:'บันทึกการเทรด',journal:'สมุดบันทึกประจำวัน',reports:'รายงานสรุปผล',settings:'การตั้งค่า',accounts:'บัญชีและกลยุทธ์'};
 function switchPanel(id, el) {
   document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
   document.getElementById('panel-'+id).classList.add('active');
@@ -2105,6 +2148,117 @@ function switchPanel(id, el) {
   el.classList.add('active');
   document.getElementById('tb-title').textContent = panelTitles[id] || id;
   if(id==='reports') renderReports();
+  if(id==='accounts') renderAccountsList();
+}
+
+/* ═══ ACCOUNTS ═══ */
+function persistAccounts() {
+  localStorage.setItem('dosho_accounts', JSON.stringify(accounts));
+  localStorage.setItem('dosho_active_account', activeAccountId);
+}
+
+function switchAccount(id) {
+  if(id === activeAccountId) return;
+  activeAccountId = id;
+  persistAccounts();
+  const a = accounts.find(x => x.id === id);
+  if(a) { settings.balance = a.balance; settings.currency = a.currency; settings.strategy = a.strategy; }
+  trades = JSON.parse(localStorage.getItem(acctKey('dosho_trades')) || '[]');
+  journal = JSON.parse(localStorage.getItem(acctKey('dosho_journal')) || '{}');
+  checklist = JSON.parse(localStorage.getItem(acctKey('dosho_checklist')) || '{"entry":[],"exit":[]}');
+  const tagPoolRaw = localStorage.getItem(acctKey('dosho_tag_pool'));
+  if(tagPoolRaw) {
+    try { defaultTags = JSON.parse(tagPoolRaw); } catch(e) { defaultTags = [..._defaultTagPool]; }
+  } else { defaultTags = [..._defaultTagPool]; }
+  ensureQuickTags();
+  const tagsRaw = localStorage.getItem(acctKey('dosho_tags'));
+  try { selectedTags = tagsRaw ? JSON.parse(tagsRaw) : []; } catch(e) { selectedTags = []; }
+  activeJournalDate = new Date().toISOString().slice(0,10);
+  renderDashboard(); renderCalendar(); renderTradeTable(); renderReports();
+  loadSettings(); loadJournal(); renderChecklist(); renderTags();
+  renderAccountsList();
+}
+
+let editAccountId = null;
+function openNewAccountModal() {
+  editAccountId = null;
+  document.getElementById('acct-modal-title').textContent = 'สร้างบัญชีใหม่';
+  document.getElementById('acct-name').value = '';
+  document.getElementById('acct-balance').value = '';
+  document.getElementById('acct-currency').value = 'USD';
+  document.getElementById('acct-strategy').value = '';
+  document.getElementById('acct-err').style.display = 'none';
+  document.getElementById('acct-overlay').classList.add('open');
+  setTimeout(() => document.getElementById('acct-name').focus(), 100);
+}
+
+function openEditAccountModal(id) {
+  const a = accounts.find(x => x.id === id);
+  if(!a) return;
+  editAccountId = id;
+  document.getElementById('acct-modal-title').textContent = 'แก้ไขบัญชี';
+  document.getElementById('acct-name').value = a.name;
+  document.getElementById('acct-balance').value = a.balance;
+  document.getElementById('acct-currency').value = a.currency || 'USD';
+  document.getElementById('acct-strategy').value = a.strategy || '';
+  document.getElementById('acct-err').style.display = 'none';
+  document.getElementById('acct-overlay').classList.add('open');
+}
+
+function closeAccountModal() { document.getElementById('acct-overlay').classList.remove('open'); editAccountId = null; }
+
+function saveAccountModal() {
+  const name = document.getElementById('acct-name').value.trim();
+  if(!name) { const e = document.getElementById('acct-err'); e.textContent='กรุณาระบุชื่อบัญชี'; e.style.display='block'; return; }
+  const balance = parseFloat(document.getElementById('acct-balance').value) || 0;
+  const currency = document.getElementById('acct-currency').value;
+  const strategy = document.getElementById('acct-strategy').value.trim() || 'ระบบเทรด';
+  if(editAccountId) {
+    const a = accounts.find(x => x.id === editAccountId);
+    if(a) { a.name = name; a.balance = balance; a.currency = currency; a.strategy = strategy; }
+    if(editAccountId === activeAccountId) { settings.balance = balance; settings.currency = currency; settings.strategy = strategy; localStorage.setItem('dosho_settings', JSON.stringify(settings)); renderDashboard(); renderCalendar(); renderChecklist(); updateSidebar(); }
+  } else {
+    const id = 'acct_' + Date.now();
+    accounts.push({ id, name, balance, currency, strategy });
+  }
+  persistAccounts();
+  closeAccountModal();
+  renderAccountsList();
+}
+
+function deleteAccount(id) {
+  if(accounts.length <= 1) { alert('ต้องมีบัญชีอย่างน้อย 1 บัญชี'); return; }
+  if(!confirm('ลบบัญชีนี้? ข้อมูลการเทรดในบัญชีนี้จะถูกลบด้วย')) return;
+  ['dosho_trades','dosho_journal','dosho_checklist','dosho_tag_pool','dosho_tags'].forEach(base => {
+    const key = id === 'default' ? base : base + '_' + id;
+    localStorage.removeItem(key);
+  });
+  accounts = accounts.filter(a => a.id !== id);
+  if(activeAccountId === id) switchAccount(accounts[0].id);
+  else { persistAccounts(); renderAccountsList(); }
+}
+
+function renderAccountsList() {
+  const el = document.getElementById('accounts-list');
+  if(!el) return;
+  const sym = getCurrencySymbol;
+  el.innerHTML = accounts.map(a => {
+    const isActive = a.id === activeAccountId;
+    const aSymbols = { USD: '$', USC: '¢', EUR: '€', GBP: '£', JPY: '¥', THB: '฿' };
+    const aSym = aSymbols[a.currency] || '$';
+    return `<div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border2);${isActive?'opacity:1':'opacity:.75'}">
+      <div style="width:36px;height:36px;border-radius:50%;background:${isActive?'var(--purple-dim)':'var(--surface2)'};border:${isActive?'2px solid var(--purple)':'1px solid var(--border)'};display:flex;align-items:center;justify-content:center;font-weight:700;color:${isActive?'var(--purple2)':'var(--text3)'};flex-shrink:0">${(a.name||'A').charAt(0).toUpperCase()}</div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:13px;font-weight:600;color:var(--text);display:flex;align-items:center;gap:6px">${a.name}${isActive?'<span style="font-size:10px;background:var(--purple-dim);color:var(--purple2);padding:1px 7px;border-radius:10px;font-weight:600">ใช้งานอยู่</span>':''}</div>
+        <div style="font-size:11px;color:var(--text3);margin-top:2px">${a.strategy||'ระบบเทรด'} &nbsp;·&nbsp; ${a.balance.toLocaleString('th-TH')}${aSym} &nbsp;·&nbsp; ${a.currency}</div>
+      </div>
+      <div style="display:flex;gap:6px;flex-shrink:0">
+        ${!isActive?`<button class="btn" style="font-size:11px;padding:5px 12px" onclick="switchAccount('${a.id}')">เปลี่ยน</button>`:''}
+        <button class="btn btn-ghost" style="font-size:11px;padding:5px 10px" onclick="openEditAccountModal('${a.id}')">แก้ไข</button>
+        ${accounts.length>1?`<button class="btn btn-ghost" style="font-size:11px;padding:5px 10px;color:var(--red)" onclick="deleteAccount('${a.id}')">ลบ</button>`:''}
+      </div>
+    </div>`;
+  }).join('')+'<div style="font-size:11px;color:var(--text3);padding-top:10px">แต่ละบัญชีมีรายการเทรด บันทึกประจำวัน และเช็กลิสต์แยกอิสระจากกัน</div>';
 }
 
 /* ═══ TOOLTIP ═══ */

@@ -2135,16 +2135,25 @@ function switchPanel(id, el) {
   });
 })();
 
-/* ═══ CSV IMPORT ═══ */
+/* ═══ CSV / HTML IMPORT ═══ */
 function handleCSVImport(e) {
   const file = e.target.files[0];
   if(!file) return;
   const reader = new FileReader();
   reader.onload = (ev) => {
-    const text = ev.target.result;
-    const imported = parseMT5CSV(text);
+    const ab = ev.target.result;
+    const bytes = new Uint8Array(ab);
+    // MT5 HTML reports are UTF-16 LE (BOM: FF FE)
+    let text;
+    if(bytes[0] === 0xFF && bytes[1] === 0xFE) {
+      text = new TextDecoder('utf-16le').decode(ab);
+    } else {
+      text = new TextDecoder('utf-8').decode(ab);
+    }
+    const isHtml = /\.html?$/i.test(file.name) || text.trimStart().startsWith('<');
+    const imported = isHtml ? parseMT5HTML(text) : parseMT5CSV(text);
     if(!imported.length) {
-      alert('ไม่พบรายการเทรดในไฟล์นี้\n\nกรุณาส่งออกจาก MT5: View → Terminal → History → คลิกขวา → Save as Report (CSV)');
+      alert('ไม่พบรายการเทรดในไฟล์นี้\n\nกรุณาส่งออกจาก MT5: View → Terminal → History → คลิกขวา → Save as Report');
       e.target.value = '';
       return;
     }
@@ -2164,7 +2173,49 @@ function handleCSVImport(e) {
     }
     e.target.value = '';
   };
-  reader.readAsText(file, 'UTF-8');
+  reader.readAsArrayBuffer(file);
+}
+
+function parseMT5HTML(text) {
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(text, 'text/html');
+  const rows = doc.querySelectorAll('tr[bgcolor]');
+  const result = [];
+  const dtmt5 = s => s ? s.trim().replace(/\./g, '-').replace(' ', 'T').slice(0, 16) : '';
+  const flt  = s => parseFloat((s||'').replace(/[, ]/g,'')) || 0;
+  const fltN = s => { const v = parseFloat((s||'').replace(/[, ]/g,'')); return isNaN(v) ? null : v; };
+
+  rows.forEach(row => {
+    // MT5 HTML rows contain a td.hidden (colspan=8) that must be skipped
+    const cells = [...row.querySelectorAll('td')]
+      .filter(td => !td.classList.contains('hidden'))
+      .map(td => td.textContent.trim());
+    if(cells.length < 12) return;
+    const type = cells[3].toLowerCase();
+    if(!['buy', 'sell'].includes(type)) return;
+    // Strip broker suffix e.g. XAUUSD.sc → XAUUSD
+    const symbol = cells[2].replace(/\.[a-zA-Z]+\d*$/, '').toUpperCase();
+    if(!symbol) return;
+    const commission = flt(cells[10]);
+    const swap       = flt(cells[11]);
+    const profit     = flt(cells[12]);
+    const pnl        = +(profit + commission + swap).toFixed(2);
+    result.push({
+      id:         Date.now().toString(36) + Math.random().toString(36).slice(2),
+      symbol,
+      direction:  type === 'buy' ? 'BUY' : 'SELL',
+      openDt:     dtmt5(cells[0]),
+      closeDt:    dtmt5(cells[8]),
+      openPx:     fltN(cells[5]),
+      closePx:    fltN(cells[9]),
+      volume:     fltN(cells[4]),
+      pnl,
+      commission: fltN(cells[10]),
+      tag: '',
+      notes: '',
+    });
+  });
+  return result;
 }
 
 function parseMT5CSV(text) {

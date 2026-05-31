@@ -755,6 +755,7 @@ body{font-family:'Mitr',-apple-system,sans-serif;background:var(--bg);color:var(
               <select class="form-input" id="set-currency" onchange="saveSettings()">
                 <option value="THB">THB (฿)</option>
                 <option value="USD">USD ($)</option>
+                <option value="USC">USC (¢)</option>
                 <option value="EUR">EUR (€)</option>
                 <option value="GBP">GBP (£)</option>
                 <option value="JPY">JPY (¥)</option>
@@ -871,7 +872,7 @@ let cumChartInst = null, rptChartInst = null;
 
 /* ═══ HELPERS ═══ */
 function getCurrencySymbol() {
-  const symbols = { USD: '$', EUR: '€', GBP: '£', JPY: '¥', THB: '฿' };
+  const symbols = { USD: '$', USC: '¢', EUR: '€', GBP: '£', JPY: '¥', THB: '฿' };
   return symbols[settings.currency] || '$';
 }
 
@@ -1936,14 +1937,19 @@ function loadSettings() {
   updateSidebar();
 }
 function saveSettings() {
+  const prevCurrency = settings.currency;
   settings.name = document.getElementById('set-name').value;
   settings.balance = parseFloat(document.getElementById('set-balance').value) || 0;
   settings.strategy = document.getElementById('set-strategy').value;
   settings.currency = document.getElementById('set-currency').value;
   localStorage.setItem('dosho_settings', JSON.stringify(settings));
   document.getElementById('lbl-set-balance').textContent = 'เงินทุนเริ่มต้น (' + getCurrencySymbol() + ')';
+  document.getElementById('lbl-f-pnl').textContent = 'กำไร/ขาดทุนสุทธิ (' + getCurrencySymbol() + ') *';
   updateSidebar();
   renderChecklist();
+  if (settings.currency !== prevCurrency) {
+    renderDashboard(); renderCalendar(); renderTradeTable(); renderReports();
+  }
 }
 function clearAllData() {
   if(!confirm('คุณต้องการลบข้อมูลการเทรดและบันทึกทั้งหมดใช่หรือไม่? การดำเนินการนี้ไม่สามารถย้อนกลับได้')) return;

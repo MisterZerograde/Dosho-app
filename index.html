@@ -61,7 +61,8 @@ body{font-family:'Mitr',-apple-system,sans-serif;background:var(--bg);color:var(
 .tab-panel{display:none;animation:panelIn .22s ease both}
 .tab-panel.active{display:block}
 #panel-dashboard.active{display:flex;flex-direction:column;flex:1;min-height:0;overflow:hidden}
-#panel-trades.active{display:flex;flex-direction:column;flex:1;min-height:0;overflow-y:auto}
+#panel-trades.active{display:flex;flex-direction:column;flex:1;min-height:0;overflow:hidden}
+#panel-trades.active>.card{flex:1;min-height:0;overflow-y:auto}
 @keyframes panelIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
 #dash-content{flex:1;min-height:0;overflow:hidden}
 

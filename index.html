@@ -560,7 +560,8 @@ body{font-family:'Mitr',-apple-system,sans-serif;background:var(--bg);color:var(
     <button class="hamburger" onclick="toggleSidebar()">☰</button>
     <div class="tb-title" id="tb-title">แดชบอร์ด</div>
     <div class="tb-spacer"></div>
-    <button id="btn-sync-mt5" class="btn btn-ghost" style="cursor:pointer;display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;padding:7px 13px;margin-right:6px" title="ซิงค์ข้อมูลจาก MT5 Bridge (ต้องเปิด mt5_bridge.exe)" onclick="syncMT5()">
+    <button id="btn-sync-mt5" class="btn btn-ghost" style="cursor:pointer;display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;padding:7px 13px;margin-right:6px" onclick="syncMT5()">
+      <span id="mt5-dot" style="width:7px;height:7px;border-radius:50%;background:#6b7280;flex-shrink:0;transition:background .4s"></span>
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0018.49 15"/></svg>
       <span class="btn-label">Sync MT5</span>
     </button>
@@ -1127,6 +1128,10 @@ function init() {
   // default datetime-local to now
   const localNow = toLocalDT(new Date());
   document.getElementById('f-open-dt').value = localNow;
+
+  // MT5 Bridge status — check on load, then every 30s
+  checkMT5Bridge();
+  setInterval(checkMT5Bridge, 30000);
 }
 
 function toLocalDT(d) {
@@ -2691,13 +2696,85 @@ function handleCSVImport(e) {
   reader.readAsArrayBuffer(file);
 }
 
+/* ── MT5 Bridge status polling ── */
+let _mt5BridgeInfo = null;
+
+function _updateDot(state, title) {
+  const dot = document.getElementById('mt5-dot');
+  if (!dot) return;
+  const colors = { online: '#22c55e', warn: '#f59e0b', offline: '#6b7280', syncing: '#a78bfa' };
+  dot.style.background = colors[state] || colors.offline;
+  const btn = document.getElementById('btn-sync-mt5');
+  if (btn) btn.title = title;
+}
+
+async function checkMT5Bridge() {
+  try {
+    const res = await fetch('http://127.0.0.1:5678/status', { signal: AbortSignal.timeout(2000) });
+    if (!res.ok) throw new Error();
+    const d = await res.json();
+    _mt5BridgeInfo = d;
+    if (d.connected) {
+      const bal = d.balance != null ? `  Balance: ${d.balance} ${d.currency || ''}` : '';
+      _updateDot('online', `MT5 Bridge พร้อมใช้งาน\n#${d.login} @ ${d.server}${bal}`);
+    } else {
+      _mt5BridgeInfo = null;
+      _updateDot('warn', 'MT5 Bridge กำลังทำงาน แต่ MT5 ยังไม่ได้เชื่อมต่อ\nเปิด MetaTrader 5 แล้วล็อกอิน');
+    }
+  } catch {
+    _mt5BridgeInfo = null;
+    _updateDot('offline', 'MT5 Bridge ออฟไลน์\nคลิกเพื่อดูวิธีติดตั้ง');
+  }
+}
+
+function _showMT5SetupModal() {
+  if (document.getElementById('_mt5-setup-modal')) return;
+  const ov = document.createElement('div');
+  ov.id = '_mt5-setup-modal';
+  ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9998;display:flex;align-items:center;justify-content:center;padding:16px';
+  ov.innerHTML = `
+    <div style="background:var(--surface);border-radius:16px;padding:28px 28px 24px;max-width:420px;width:100%;box-shadow:0 24px 64px rgba(0,0,0,.4)">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:6px">
+        <div style="width:40px;height:40px;border-radius:10px;background:var(--purple);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0018.49 15"/></svg>
+        </div>
+        <div>
+          <div style="font-size:17px;font-weight:700">ตั้งค่า MT5 Bridge</div>
+          <div style="font-size:12px;color:var(--text3)">ไม่พบโปรแกรม Bridge ที่กำลังทำงาน</div>
+        </div>
+      </div>
+      <div style="height:1px;background:var(--border);margin:16px 0"></div>
+      <div style="display:flex;flex-direction:column;gap:14px;margin-bottom:22px">
+        ${[
+          ['1','เปิด MetaTrader 5','ต้องล็อกอินเข้า Terminal ไว้ก่อน'],
+          ['2','รัน mt5_bridge.exe','ดาวน์โหลดจาก GitHub แล้วดับเบิ้ลคลิก หรือรัน <code style="background:var(--surface2);padding:1px 5px;border-radius:4px;font-size:11px">python mt5_bridge.py</code>'],
+          ['3','กลับมากด Sync MT5','ดอทสีเขียว <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#22c55e;vertical-align:middle"></span> = พร้อมซิงค์'],
+        ].map(([n,h,b]) => `
+          <div style="display:flex;gap:13px;align-items:flex-start">
+            <span style="background:var(--purple);color:#fff;border-radius:50%;width:24px;height:24px;min-width:24px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700">${n}</span>
+            <div><div style="font-size:13px;font-weight:600;margin-bottom:2px">${h}</div><div style="font-size:12px;color:var(--text3);line-height:1.5">${b}</div></div>
+          </div>`).join('')}
+      </div>
+      <div style="background:var(--surface2);border-radius:8px;padding:10px 12px;margin-bottom:20px;font-size:12px;color:var(--text3)">
+        ใช้งานได้บน <b style="color:var(--text)">Chrome / Edge</b> เท่านั้น (ข้อจำกัดของ browser security)
+      </div>
+      <div style="display:flex;gap:10px">
+        <button onclick="document.getElementById('_mt5-setup-modal').remove()" style="flex:1;padding:10px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text);cursor:pointer;font-size:13px;font-weight:600">ปิด</button>
+        <button onclick="checkMT5Bridge();document.getElementById('_mt5-setup-modal').remove()" style="flex:1;padding:10px;border-radius:8px;border:none;background:var(--purple);color:#fff;cursor:pointer;font-size:13px;font-weight:600">ตรวจสอบอีกครั้ง</button>
+      </div>
+    </div>`;
+  ov.addEventListener('click', e => { if (e.target === ov) ov.remove(); });
+  document.body.appendChild(ov);
+}
+
 async function syncMT5() {
   const btn = document.getElementById('btn-sync-mt5');
   const lbl = btn.querySelector('.btn-label');
   btn.disabled = true;
   lbl.textContent = 'กำลังซิงค์...';
+  _updateDot('syncing', 'กำลังซิงค์...');
   try {
-    const res = await fetch('http://127.0.0.1:5678/sync', { signal: AbortSignal.timeout(12000) });
+    const res = await fetch('http://127.0.0.1:5678/sync', { signal: AbortSignal.timeout(15000) });
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
       throw new Error(err.error || `HTTP ${res.status}`);
@@ -2712,22 +2789,34 @@ async function syncMT5() {
     trades.sort((a, b) => new Date(a.openDt) - new Date(b.openDt));
     persist();
     renderDashboard(); renderCalendar(); renderTradeTable(); renderReports();
-    showSyncToast(`✓ ซิงค์สำเร็จ เพิ่ม ${added} รายการใหม่ (ข้าม ${imported.length - added} ซ้ำ)`, false);
+    await checkMT5Bridge();
+    _showSyncToast(
+      added > 0
+        ? `✓ เพิ่ม ${added} รายการใหม่  (ข้าม ${imported.length - added} ซ้ำ)`
+        : `✓ ข้อมูลอัปเดตแล้ว  ไม่มีรายการใหม่`,
+      false
+    );
   } catch (e) {
-    const offline = e instanceof TypeError || e.name === 'AbortError';
-    showSyncToast(offline ? '✗ ไม่พบ MT5 Bridge — กรุณาเปิด mt5_bridge.exe ก่อน' : '✗ ' + e.message, true);
+    const offline = e instanceof TypeError || e.name === 'AbortError' || e.name === 'TimeoutError';
+    if (offline) {
+      _updateDot('offline', 'MT5 Bridge ออฟไลน์');
+      _showMT5SetupModal();
+    } else {
+      await checkMT5Bridge();
+      _showSyncToast('✗ ' + e.message, true);
+    }
   } finally {
     btn.disabled = false;
     lbl.textContent = 'Sync MT5';
   }
 }
 
-function showSyncToast(msg, isError) {
+function _showSyncToast(msg, isError) {
   let el = document.getElementById('_sync-toast');
   if (!el) {
     el = document.createElement('div');
     el.id = '_sync-toast';
-    el.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);padding:10px 20px;border-radius:8px;font-size:13px;font-weight:600;z-index:9999;box-shadow:0 4px 16px rgba(0,0,0,.25);transition:opacity .3s;white-space:nowrap';
+    el.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);padding:11px 22px;border-radius:10px;font-size:13px;font-weight:600;z-index:9999;box-shadow:0 4px 20px rgba(0,0,0,.3);transition:opacity .3s;white-space:nowrap;pointer-events:none';
     document.body.appendChild(el);
   }
   el.textContent = msg;

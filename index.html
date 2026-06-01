@@ -61,12 +61,13 @@ body{font-family:'Mitr',-apple-system,sans-serif;background:var(--bg);color:var(
 .tab-panel{display:none;animation:panelIn .22s ease both}
 .tab-panel.active{display:block}
 #panel-dashboard.active{display:flex;flex-direction:column;flex:1;min-height:0;overflow:hidden}
+#panel-trades.active{display:flex;flex-direction:column;flex:1;min-height:0;overflow-y:auto}
 @keyframes panelIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
 #dash-content{flex:1;min-height:0;overflow:hidden}
 
 /* ─── KPI ROW ─── */
 .kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;width:100%}
-.kpi-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 16px;box-shadow:0 1px 3px rgba(40,44,103,0.05);transition:transform .18s,box-shadow .18s,border-color .18s;cursor:default}
+.kpi-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 16px;box-shadow:0 1px 3px rgba(40,44,103,0.05);transition:transform .18s,box-shadow .18s,border-color .18s;cursor:pointer}
 .kpi-card:hover{transform:translateY(-4px);box-shadow:0 8px 24px rgba(40,44,103,0.12);border-color:rgba(62,69,184,0.2)}
 .kpi-lbl{font-size:11px;color:var(--text2);font-weight:500;margin-bottom:6px}
 .kpi-val{font-size:22px;font-weight:500;letter-spacing:-.5px}
@@ -128,13 +129,16 @@ body{font-family:'Mitr',-apple-system,sans-serif;background:var(--bg);color:var(
 .wk-pnl.r{color:var(--red)}
 .wk-pnl.z{color:var(--text3)}
 .wk-days{font-size:9px;color:var(--text3);margin-top:1px}
+.wk-row.wk-profit{background:rgba(16,185,129,.07);border-radius:4px}
+.wk-row.wk-loss{background:rgba(239,68,68,.07);border-radius:4px}
 
 /* cumulative */
 .cum-wrap{padding:6px 14px 14px;height:120px}
 
 /* ─── RECENT TRADES MINI ─── */
-.rtrade-row{display:flex;align-items:center;gap:8px;padding:7px 14px;border-bottom:1px solid var(--border2)}
+.rtrade-row{display:flex;align-items:center;gap:8px;padding:7px 14px;border-bottom:1px solid var(--border2);cursor:pointer;transition:background .12s}
 .rtrade-row:last-child{border-bottom:none}
+.rtrade-row:hover{background:var(--surface2)}
 .rtrade-sym{font-size:12px;font-weight:500;color:var(--text);min-width:52px}
 .rtrade-date{font-size:11px;color:var(--text3);flex:1}
 .rtrade-pnl{font-size:12px;font-weight:500;white-space:nowrap}
@@ -417,6 +421,23 @@ body{font-family:'Mitr',-apple-system,sans-serif;background:var(--bg);color:var(
 .red{color:var(--red)}
 .info-i{width:14px;height:14px;border-radius:50%;background:var(--surface3);color:var(--text3);display:inline-flex;align-items:center;justify-content:center;font-size:9px;cursor:help;font-style:italic;font-weight:500}
 #global-tip{position:fixed;background:#1e2240;border:1px solid rgba(62,69,184,0.2);padding:9px 11px;border-radius:7px;font-size:11px;color:#e2e8f0;line-height:1.5;width:240px;z-index:9999;pointer-events:none;box-shadow:0 6px 18px rgba(30,34,64,.25);display:none}
+/* ─── FORMULA MODAL ─── */
+.formula-eq{font-size:13px;font-weight:600;color:var(--purple2);padding:8px 12px;background:var(--surface2);border-radius:7px;margin:10px 0 6px;text-align:center}
+.formula-row{display:flex;align-items:flex-start;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border2);gap:10px}
+.formula-row:last-child{border-bottom:none}
+.formula-lbl{font-size:11px;color:var(--text2);flex:1;line-height:1.4}
+.formula-val{font-size:12px;font-weight:500;color:var(--text);text-align:right;min-width:80px;white-space:nowrap}
+.formula-note{font-size:11px;color:var(--text3);margin-top:10px;line-height:1.6;padding:8px 10px;background:var(--surface2);border-radius:6px}
+/* ─── SYSTEM SELECTOR ─── */
+.sys-row{display:flex;align-items:center;gap:6px;padding:0 16px 10px}
+.sys-select{background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:3px 8px;font-size:12px;font-weight:500;color:var(--text);font-family:inherit;outline:none;cursor:pointer;flex:1}
+.sys-select:focus{border-color:var(--purple)}
+.sys-btn{width:24px;height:24px;border-radius:5px;border:1px solid var(--border);background:transparent;color:var(--text3);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:13px;font-family:inherit;transition:all .12s;line-height:1;padding:0}
+.sys-btn:hover{background:var(--surface2);color:var(--text)}
+.sys-btn.del:hover{background:var(--red-dim);color:var(--red);border-color:rgba(239,68,68,.3)}
+/* ─── CLICKABLE STAT ROWS ─── */
+.rpt-stat-row.clickable{cursor:pointer;transition:background .12s;border-radius:4px}
+.rpt-stat-row.clickable:hover{background:var(--surface2)}
 ::-webkit-scrollbar{width:5px;height:5px}
 ::-webkit-scrollbar-track{background:transparent}
 ::-webkit-scrollbar-thumb{background:var(--surface3);border-radius:3px}
@@ -496,7 +517,7 @@ body{font-family:'Mitr',-apple-system,sans-serif;background:var(--bg);color:var(
         <!-- KPI Row -->
         <div class="kpi-row">
           <!-- Net P&L -->
-          <div class="kpi-card">
+          <div class="kpi-card" onclick="openFormulaModal('pnl')" title="คลิกเพื่อดูสูตรคำนวณ">
             <div class="kpi-inner">
               <div style="flex:1">
                 <div class="kpi-lbl" style="display:flex;align-items:center;gap:4px">กำไร/ขาดทุนสุทธิ <span class="info-i" data-tip="กำไร − ขาดทุน − ค่าคอมมิชชัน − สวอป จากออเดอร์ที่ปิดแล้วในช่วงที่เลือก">i</span></div>
@@ -511,7 +532,7 @@ body{font-family:'Mitr',-apple-system,sans-serif;background:var(--bg);color:var(
             </div>
           </div>
           <!-- Profit Factor -->
-          <div class="kpi-card">
+          <div class="kpi-card" onclick="openFormulaModal('pf')" title="คลิกเพื่อดูสูตรคำนวณ">
             <div class="kpi-inner">
               <div style="flex:1">
                 <div class="kpi-lbl" style="display:flex;align-items:center;gap:4px">ปัจจัยการทำกำไร (Profit Factor) <span class="info-i" data-tip="กำไรรวม ÷ ขาดทุนรวม">i</span></div>
@@ -526,7 +547,7 @@ body{font-family:'Mitr',-apple-system,sans-serif;background:var(--bg);color:var(
             </div>
           </div>
           <!-- Win Rate -->
-          <div class="kpi-card">
+          <div class="kpi-card" onclick="openFormulaModal('wr')" title="คลิกเพื่อดูสูตรคำนวณ">
             <div style="display:flex;align-items:center;gap:4px;margin-bottom:4px" class="kpi-lbl">อัตราการชนะ (Win Rate) <span class="info-i" data-tip="จำนวนเทรดที่ชนะ ÷ จำนวนเทรดทั้งหมด × 100">i</span></div>
             <div class="kpi-inner">
               <div>
@@ -546,7 +567,7 @@ body{font-family:'Mitr',-apple-system,sans-serif;background:var(--bg);color:var(
             </div>
           </div>
           <!-- Avg Win/Loss -->
-          <div class="kpi-card">
+          <div class="kpi-card" onclick="openFormulaModal('rr')" title="คลิกเพื่อดูสูตรคำนวณ">
             <div class="kpi-lbl" style="display:flex;align-items:center;gap:4px;margin-bottom:4px">Risk reward เฉลี่ย <span class="info-i" data-tip="กำไรเฉลี่ยต่อเทรด ÷ ขาดทุนเฉลี่ยต่อเทรด">i</span></div>
             <div class="kpi-val" id="kpi-rr">—</div>
             <div class="kpi-rr-flank">
@@ -657,9 +678,11 @@ body{font-family:'Mitr',-apple-system,sans-serif;background:var(--bg);color:var(
             <div class="strat-hd">
               <div class="strat-icon">✓</div>
               <div class="strat-info">
-                <div style="display:flex;align-items:center;gap:6px">
-                  <div class="strat-name" id="strat-name">ระบบเทรด</div>
-                  <button onclick="editStratName()" style="background:transparent;border:none;color:var(--text3);cursor:pointer;font-size:12px;padding:1px 4px;border-radius:4px;transition:color .12s" title="เปลี่ยนชื่อระบบเทรด" onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--text3)'">✎</button>
+                <div class="sys-row" style="padding:0 0 8px">
+                  <select id="system-select" class="sys-select" onchange="switchSystem(this.value)" title="เลือกระบบเทรด"></select>
+                  <button class="sys-btn" onclick="editCurrentSystemName()" title="เปลี่ยนชื่อระบบเทรด">✎</button>
+                  <button class="sys-btn" onclick="addNewSystem()" title="สร้างระบบเทรดใหม่">+</button>
+                  <button class="sys-btn del" id="del-system-btn" onclick="deleteCurrentSystem()" title="ลบระบบเทรดนี้">×</button>
                 </div>
                 <div class="strat-prog-row">
                   <span class="strat-frac" id="strat-frac">0 / 0</span>
@@ -708,9 +731,9 @@ body{font-family:'Mitr',-apple-system,sans-serif;background:var(--bg);color:var(
           <div class="card-hd"><span class="card-title">สรุปผลงานการเทรด</span></div>
           <div class="card-bd">
             <div class="rpt-stat-row"><span class="rpt-stat-lbl">จำนวนครั้งที่เทรด</span><span class="rpt-stat-val" id="r-trades">—</span></div>
-            <div class="rpt-stat-row"><span class="rpt-stat-lbl">กำไร/ขาดทุนสุทธิ</span><span class="rpt-stat-val" id="r-pnl">—</span></div>
-            <div class="rpt-stat-row"><span class="rpt-stat-lbl">อัตราการชนะ (Win Rate)</span><span class="rpt-stat-val" id="r-wr">—</span></div>
-            <div class="rpt-stat-row"><span class="rpt-stat-lbl">ปัจจัยการทำกำไร (Profit Factor)</span><span class="rpt-stat-val" id="r-pf">—</span></div>
+            <div class="rpt-stat-row clickable" onclick="openFormulaModal('pnl')"><span class="rpt-stat-lbl">กำไร/ขาดทุนสุทธิ ⓘ</span><span class="rpt-stat-val" id="r-pnl">—</span></div>
+            <div class="rpt-stat-row clickable" onclick="openFormulaModal('wr')"><span class="rpt-stat-lbl">อัตราการชนะ (Win Rate) ⓘ</span><span class="rpt-stat-val" id="r-wr">—</span></div>
+            <div class="rpt-stat-row clickable" onclick="openFormulaModal('pf')"><span class="rpt-stat-lbl">ปัจจัยการทำกำไร (Profit Factor) ⓘ</span><span class="rpt-stat-val" id="r-pf">—</span></div>
             <div class="rpt-stat-row"><span class="rpt-stat-lbl">กำไรเฉลี่ยต่อไม้ที่ชนะ</span><span class="rpt-stat-val green" id="r-avgwin">—</span></div>
             <div class="rpt-stat-row"><span class="rpt-stat-lbl">ขาดทุนเฉลี่ยต่อไม้ที่แพ้</span><span class="rpt-stat-val red" id="r-avgloss">—</span></div>
             <div class="rpt-stat-row"><span class="rpt-stat-lbl">ไม้ที่ได้กำไรสูงสุด</span><span class="rpt-stat-val green" id="r-best">—</span></div>
@@ -930,6 +953,8 @@ let settings = JSON.parse(localStorage.getItem('dosho_settings') || '{"name":"Tr
 // sync settings from active account
 (function(){const a=accounts.find(x=>x.id===activeAccountId);if(a){settings.balance=a.balance;settings.currency=a.currency;settings.strategy=a.strategy;}})();
 let checklist = JSON.parse(localStorage.getItem(acctKey('dosho_checklist')) || '{"entry":[],"exit":[]}');
+let tradingSystems = [];
+let activeSystemId = '';
 let activeFilter = 'all';
 let editId = null;
 let calYear, calMonth;
@@ -951,7 +976,7 @@ function init() {
 
   loadSettings();
   loadJournal();
-  loadChecklist();
+  loadSystems();
   renderTags();
   renderDashboard();
   renderCalendar();
@@ -1220,7 +1245,7 @@ function renderRecentTrades() {
     const pnlColor = t.pnl >= 0 ? 'var(--green)' : 'var(--red)';
     const pnlStr = (t.pnl >= 0 ? '+' : '−') + Math.abs(t.pnl).toLocaleString('th-TH', {minimumFractionDigits:0, maximumFractionDigits:0}) + getCurrencySymbol();
     const dateStr = t.openDt ? new Date(t.openDt).toLocaleDateString('th-TH', {month:'short', day:'numeric'}) : '—';
-    return `<div class="rtrade-row">
+    return `<div class="rtrade-row" onclick="openTradeDetail('${t.id}')">
       <span class="rtrade-sym">${t.symbol}</span>
       <span class="ttype ${t.direction === 'BUY' ? 'b' : 's'}">${t.direction}</span>
       <span class="rtrade-date">${dateStr}</span>
@@ -1236,8 +1261,8 @@ function renderStatsSummary() {
   const s = calcStats(trades);
   const cur = getCurrencySymbol();
   const fmtV = v => v === null || v === undefined ? '—' : Math.abs(v).toFixed(2) + cur;
-  const row = (lbl, val, color) =>
-    `<div style="display:flex;align-items:center;justify-content:space-between;padding:7px 14px;border-bottom:1px solid var(--border2)">
+  const row = (lbl, val, color, onclick) =>
+    `<div style="display:flex;align-items:center;justify-content:space-between;padding:7px 14px;border-bottom:1px solid var(--border2);${onclick?'cursor:pointer;':''}transition:background .12s" ${onclick?`onclick="${onclick}" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background=''"`:''}>
       <span style="font-size:11px;color:var(--text2)">${lbl}</span>
       <span style="font-size:12px;font-weight:500;${color ? 'color:'+color : ''}">${val}</span>
     </div>`;
@@ -1248,9 +1273,10 @@ function renderStatsSummary() {
   const g = 'var(--green)', r = 'var(--red)';
   el.innerHTML = [
     row('จำนวนครั้งที่เทรด', trades.length + ' ครั้ง'),
-    row('กำไร/ขาดทุนสุทธิ', (s.netPnl >= 0 ? '+' : '−') + Math.abs(s.netPnl).toFixed(2) + cur, s.netPnl >= 0 ? g : r),
-    row('อัตราการชนะ (Win Rate)', s.wr.toFixed(1) + '%', s.wr >= 50 ? g : r),
-    row('ปัจจัยการทำกำไร (Profit Factor)', s.pf === Infinity ? '∞' : s.pf !== null ? s.pf.toFixed(2) : '—', s.pf >= 1 ? g : r),
+    row('กำไร/ขาดทุนสุทธิ ⓘ', (s.netPnl >= 0 ? '+' : '−') + Math.abs(s.netPnl).toFixed(2) + cur, s.netPnl >= 0 ? g : r, "openFormulaModal('pnl')"),
+    row('อัตราการชนะ (Win Rate) ⓘ', s.wr.toFixed(1) + '%', s.wr >= 50 ? g : r, "openFormulaModal('wr')"),
+    row('ปัจจัยการทำกำไร (Profit Factor) ⓘ', s.pf === Infinity ? '∞' : s.pf !== null ? s.pf.toFixed(2) : '—', s.pf >= 1 ? g : r, "openFormulaModal('pf')"),
+    row('Risk Reward เฉลี่ย ⓘ', s.avgLoss > 0 ? (s.avgWin/s.avgLoss).toFixed(2) : '—', s.avgLoss > 0 && s.avgWin/s.avgLoss >= 1 ? g : null, "openFormulaModal('rr')"),
     row('กำไรเฉลี่ยต่อไม้ที่ชนะ', fmtV(s.avgWin), g),
     row('ขาดทุนเฉลี่ยต่อไม้ที่แพ้', fmtV(s.avgLoss), r),
     row('ไม้ที่ได้กำไรสูงสุด', (s.best >= 0 ? '+' : '') + s.best.toFixed(2) + cur, g),
@@ -1260,6 +1286,65 @@ function renderStatsSummary() {
     row('Sharpe Ratio', s.sharpe !== null ? s.sharpe : '—', s.sharpe > 0 ? g : null),
     row('Recovery Factor', s.rf !== null ? s.rf : '—', s.rf > 1 ? g : null),
   ].join('');
+}
+
+/* ═══ FORMULA MODAL ═══ */
+function openFormulaModal(type) {
+  const s = calcStats(trades);
+  const cur = getCurrencySymbol();
+  const fmt = v => v !== null && v !== undefined ? Math.abs(v).toFixed(2) + cur : '—';
+  const fmtN = v => v !== null && v !== undefined ? (v >= 0 ? '+' : '−') + Math.abs(v).toFixed(2) + cur : '—';
+
+  const titles = { pnl:'กำไร/ขาดทุนสุทธิ', pf:'ปัจจัยการทำกำไร (Profit Factor)', wr:'อัตราการชนะ (Win Rate)', rr:'Risk Reward เฉลี่ย' };
+  document.getElementById('day-title').textContent = titles[type] || 'สูตรคำนวณ';
+
+  let html = '';
+  if (!s) {
+    html = '<div style="text-align:center;padding:24px;color:var(--text3)">ยังไม่มีข้อมูลเทรด</div>';
+  } else if (type === 'pnl') {
+    html = `
+      <div class="formula-eq">กำไรรวม − ขาดทุนรวม</div>
+      <div style="margin-top:12px">
+        <div class="formula-row"><span class="formula-lbl">กำไรรวม (Gross Win)</span><span class="formula-val" style="color:var(--green)">+${fmt(s.grossWin)}</span></div>
+        <div class="formula-row"><span class="formula-lbl">ขาดทุนรวม (Gross Loss)</span><span class="formula-val" style="color:var(--red)">−${fmt(s.grossLoss)}</span></div>
+        <div class="formula-row" style="background:var(--surface2);border-radius:6px;padding:8px 6px;margin-top:4px"><span class="formula-lbl" style="font-weight:600">กำไร/ขาดทุนสุทธิ</span><span class="formula-val" style="color:${s.netPnl>=0?'var(--green)':'var(--red)'};">${fmtN(s.netPnl)}</span></div>
+      </div>
+      <div class="formula-note">จากเทรดทั้งหมด ${trades.length} รายการ &nbsp;·&nbsp; ชนะ ${s.wins.length} &nbsp;·&nbsp; แพ้ ${s.losses.length}</div>`;
+  } else if (type === 'pf') {
+    const pfVal = s.pf === Infinity ? '∞' : s.pf !== null ? s.pf.toFixed(2) : '—';
+    html = `
+      <div class="formula-eq">กำไรรวม ÷ ขาดทุนรวม</div>
+      <div style="margin-top:12px">
+        <div class="formula-row"><span class="formula-lbl">กำไรรวม (Gross Win)</span><span class="formula-val" style="color:var(--green)">+${fmt(s.grossWin)}</span></div>
+        <div class="formula-row"><span class="formula-lbl">ขาดทุนรวม (Gross Loss)</span><span class="formula-val" style="color:var(--red)">−${fmt(s.grossLoss)}</span></div>
+        <div class="formula-row" style="background:var(--surface2);border-radius:6px;padding:8px 6px;margin-top:4px"><span class="formula-lbl" style="font-weight:600">Profit Factor</span><span class="formula-val" style="color:${s.pf>=1?'var(--green)':'var(--red)'}">${pfVal}</span></div>
+      </div>
+      <div class="formula-note">PF > 1.5 = ดี &nbsp;·&nbsp; PF > 2 = ยอดเยี่ยม &nbsp;·&nbsp; PF = ∞ หมายถึงไม่มีเทรดที่ขาดทุนเลย</div>`;
+  } else if (type === 'wr') {
+    const pct = s.wr.toFixed(2);
+    html = `
+      <div class="formula-eq">(จำนวนเทรดชนะ ÷ เทรดทั้งหมด) × 100</div>
+      <div style="margin-top:12px">
+        <div class="formula-row"><span class="formula-lbl">เทรดชนะ</span><span class="formula-val" style="color:var(--green)">${s.wins.length} รายการ</span></div>
+        <div class="formula-row"><span class="formula-lbl">เทรดแพ้</span><span class="formula-val" style="color:var(--red)">${s.losses.length} รายการ</span></div>
+        <div class="formula-row"><span class="formula-lbl">เทรดทั้งหมด</span><span class="formula-val">${trades.length} รายการ</span></div>
+        <div class="formula-row" style="background:var(--surface2);border-radius:6px;padding:8px 6px;margin-top:4px"><span class="formula-lbl" style="font-weight:600">Win Rate</span><span class="formula-val" style="color:${s.wr>=50?'var(--green)':'var(--red)'}">${pct}%</span></div>
+      </div>
+      <div class="formula-note">Win Rate ≥ 50% ดี แต่ต้องดูคู่กับ Risk Reward เสมอ — WR 40% + RR 3:1 ยังทำกำไรได้</div>`;
+  } else if (type === 'rr') {
+    const rr = s.avgLoss > 0 ? (s.avgWin / s.avgLoss).toFixed(2) : null;
+    html = `
+      <div class="formula-eq">กำไรเฉลี่ยต่อไม้ชนะ ÷ ขาดทุนเฉลี่ยต่อไม้แพ้</div>
+      <div style="margin-top:12px">
+        <div class="formula-row"><span class="formula-lbl">กำไรเฉลี่ยต่อไม้ชนะ (Avg Win)</span><span class="formula-val" style="color:var(--green)">+${fmt(s.avgWin)}</span></div>
+        <div class="formula-row"><span class="formula-lbl">ขาดทุนเฉลี่ยต่อไม้แพ้ (Avg Loss)</span><span class="formula-val" style="color:var(--red)">−${fmt(s.avgLoss)}</span></div>
+        <div class="formula-row" style="background:var(--surface2);border-radius:6px;padding:8px 6px;margin-top:4px"><span class="formula-lbl" style="font-weight:600">Risk Reward เฉลี่ย</span><span class="formula-val">${rr !== null ? rr : '—'}</span></div>
+      </div>
+      <div class="formula-note">RR ≥ 1 หมายถึงกำไรเฉลี่ยมากกว่าขาดทุนเฉลี่ย &nbsp;·&nbsp; ใช้ร่วมกับ Win Rate เพื่อประเมิน Expectancy</div>`;
+  }
+
+  document.getElementById('day-body').innerHTML = `<div style="padding:4px 0">${html}</div>`;
+  document.getElementById('day-overlay').classList.add('open');
 }
 
 /* ═══ SIDEBAR BALANCE ═══ */
@@ -1374,7 +1459,7 @@ function renderCalendar() {
     const wkDays = week.filter(d => d && dayMap[d]);
     const wkPnl = wkDays.reduce((s,d) => s + dayMap[d].pnl, 0);
     const row = document.createElement('div');
-    row.className = 'wk-row';
+    row.className = 'wk-row' + (wkDays.length > 0 ? (wkPnl > 0 ? ' wk-profit' : wkPnl < 0 ? ' wk-loss' : '') : '');
     if(wkDays.length > 0) { row.style.cursor = 'pointer'; row.onclick = () => openWeekModal(wi, week, dayMap); }
     const cls = wkPnl > 0 ? 'g' : wkPnl < 0 ? 'r' : 'z';
     const pnlStr = wkDays.length > 0 ? (wkPnl>=0?'+':'')+fmtMoneyK(wkPnl) : '0'+getCurrencySymbol();
@@ -1558,43 +1643,135 @@ function switchJournalDate(date) {
 }
 function jnlFormat(cmd) { document.execCommand(cmd); }
 
+/* ═══ TRADING SYSTEMS ═══ */
+function loadSystems() {
+  const raw = localStorage.getItem(acctKey('dosho_systems'));
+  if (raw) {
+    try { tradingSystems = JSON.parse(raw); } catch(e) { tradingSystems = []; }
+  } else {
+    // migrate legacy checklist
+    const legacyCL = JSON.parse(localStorage.getItem(acctKey('dosho_checklist')) || '{"entry":[],"exit":[]}');
+    const defaultName = (settings.strategy && settings.strategy !== 'ระบบเทรด') ? settings.strategy : 'ระบบเทรด';
+    tradingSystems = [{ id: 'sys_' + Date.now(), name: defaultName, entry: legacyCL.entry || [], exit: legacyCL.exit || [] }];
+    saveSystems();
+  }
+  if (!tradingSystems.length) {
+    tradingSystems = [{ id: 'sys_' + Date.now(), name: 'ระบบเทรด', entry: [], exit: [] }];
+    saveSystems();
+  }
+  const savedId = localStorage.getItem(acctKey('dosho_active_system'));
+  activeSystemId = (savedId && tradingSystems.find(s => s.id === savedId)) ? savedId : tradingSystems[0].id;
+  // keep checklist in sync for backward compat
+  const sys = getActiveSystem();
+  checklist = { entry: sys.entry, exit: sys.exit };
+  renderChecklist();
+}
+
+function saveSystems() {
+  localStorage.setItem(acctKey('dosho_systems'), JSON.stringify(tradingSystems));
+  localStorage.setItem(acctKey('dosho_active_system'), activeSystemId);
+  const sys = getActiveSystem();
+  if (sys) {
+    checklist = { entry: sys.entry, exit: sys.exit };
+    localStorage.setItem(acctKey('dosho_checklist'), JSON.stringify(checklist));
+  }
+}
+
+function getActiveSystem() {
+  return tradingSystems.find(s => s.id === activeSystemId) || tradingSystems[0];
+}
+
+function switchSystem(id) {
+  activeSystemId = id;
+  const sys = getActiveSystem();
+  checklist = { entry: sys.entry, exit: sys.exit };
+  saveSystems();
+  renderChecklist();
+}
+
+function addNewSystem() {
+  const name = prompt('ชื่อระบบเทรดใหม่:');
+  if (!name || !name.trim()) return;
+  const id = 'sys_' + Date.now();
+  tradingSystems.push({ id, name: name.trim(), entry: [], exit: [] });
+  activeSystemId = id;
+  saveSystems();
+  renderChecklist();
+}
+
+function deleteCurrentSystem() {
+  if (tradingSystems.length <= 1) { alert('ต้องมีระบบเทรดอย่างน้อย 1 ระบบ'); return; }
+  if (!confirm('ลบระบบเทรด "' + (getActiveSystem()?.name || '') + '"?')) return;
+  tradingSystems = tradingSystems.filter(s => s.id !== activeSystemId);
+  activeSystemId = tradingSystems[0].id;
+  saveSystems();
+  renderChecklist();
+}
+
+function editCurrentSystemName() {
+  const sys = getActiveSystem();
+  if (!sys) return;
+  const name = prompt('เปลี่ยนชื่อระบบเทรด:', sys.name);
+  if (name === null) return;
+  sys.name = name.trim() || sys.name;
+  saveSystems();
+  renderChecklist();
+}
+
 /* ═══ CHECKLIST ═══ */
 function addRule(e, section) {
   if(e.key !== 'Enter') return;
   const input = document.getElementById(`cl-${section}-input`);
   const text = input.value.trim();
   if(!text) return;
-  checklist[section].push({ text, checked: false });
+  const sys = getActiveSystem();
+  if (!sys) return;
+  sys[section].push({ text, checked: false });
   input.value = '';
-  saveChecklist();
+  saveSystems();
   renderChecklist();
 }
 
 function toggleRule(section, idx) {
-  checklist[section][idx].checked = !checklist[section][idx].checked;
-  saveChecklist();
+  const sys = getActiveSystem();
+  if (!sys) return;
+  sys[section][idx].checked = !sys[section][idx].checked;
+  saveSystems();
   renderChecklist();
 }
 
 function deleteRule(section, idx) {
-  checklist[section].splice(idx, 1);
-  saveChecklist();
+  const sys = getActiveSystem();
+  if (!sys) return;
+  sys[section].splice(idx, 1);
+  saveSystems();
   renderChecklist();
 }
 
-function saveChecklist() { localStorage.setItem(acctKey('dosho_checklist'), JSON.stringify(checklist)); }
+function saveChecklist() { saveSystems(); }
 
 function renderChecklist() {
-  const total = checklist.entry.length + checklist.exit.length;
-  const done = checklist.entry.filter(r=>r.checked).length + checklist.exit.filter(r=>r.checked).length;
+  const sys = getActiveSystem();
+  const entry = sys ? sys.entry : [];
+  const exit = sys ? sys.exit : [];
+  const total = entry.length + exit.length;
+  const done = entry.filter(r=>r.checked).length + exit.filter(r=>r.checked).length;
   document.getElementById('strat-frac').textContent = `${done} / ${total}`;
   document.getElementById('strat-fill').style.width = total ? (done/total*100)+'%' : '0%';
-  const stratNameEl = document.getElementById('strat-name');
-  if(stratNameEl && stratNameEl.tagName !== 'INPUT') stratNameEl.textContent = settings.strategy || 'ระบบเทรด';
 
+  // populate system dropdown
+  const sel = document.getElementById('system-select');
+  if (sel) {
+    sel.innerHTML = tradingSystems.map(s => `<option value="${s.id}" ${s.id===activeSystemId?'selected':''}>${s.name}</option>`).join('');
+  }
+  // show/hide delete button
+  const delBtn = document.getElementById('del-system-btn');
+  if (delBtn) delBtn.style.display = tradingSystems.length > 1 ? 'flex' : 'none';
+
+  const sections = { entry, exit };
   ['entry','exit'].forEach(sec => {
     const el = document.getElementById(`cl-${sec}`);
-    el.innerHTML = checklist[sec].map((r,i) => `
+    el.innerHTML = sections[sec].map((r,i) => `
       <div class="cl-item ${r.checked?'chk':''}" onclick="toggleRule('${sec}',${i})">
         <div class="cl-box">${r.checked?'✓':''}</div>
         <div class="cl-lbl" style="flex:1">${r.text}</div>
@@ -1604,48 +1781,7 @@ function renderChecklist() {
   });
 }
 
-function loadChecklist() { renderChecklist(); }
-
-function editStratName() {
-  const nameEl = document.getElementById('strat-name');
-  if(!nameEl || nameEl.tagName === 'INPUT') return;
-  const current = nameEl.textContent.trim();
-
-  const input = document.createElement('input');
-  input.style.cssText = 'background:var(--surface2);border:1px solid var(--purple);border-radius:5px;padding:2px 7px;font-size:13px;font-weight:500;color:var(--text);font-family:inherit;outline:none;width:160px';
-  input.value = current;
-  nameEl.replaceWith(input);
-  input.focus();
-  input.select();
-
-  const restore = (val) => {
-    if(!input.parentNode) return;
-    const div = document.createElement('div');
-    div.className = 'strat-name';
-    div.id = 'strat-name';
-    div.textContent = val;
-    input.replaceWith(div);
-  };
-
-  let saved = false;
-  const save = () => {
-    if(saved) return;
-    saved = true;
-    const val = input.value.trim() || current;
-    settings.strategy = val;
-    localStorage.setItem('dosho_settings', JSON.stringify(settings));
-    const a = accounts.find(x => x.id === activeAccountId);
-    if(a) { a.strategy = val; persistAccounts(); }
-    restore(val);
-    document.getElementById('strat-frac') && renderChecklist();
-  };
-
-  input.onblur = save;
-  input.onkeydown = (e) => {
-    if(e.key === 'Enter') { e.preventDefault(); input.blur(); }
-    else if(e.key === 'Escape') { saved = true; restore(current); }
-  };
-}
+function loadChecklist() { loadSystems(); }
 
 /* ═══ TAGS ═══ */
 const _defaultTagPool = [
@@ -1967,11 +2103,12 @@ function saveSettings() {
 }
 function clearAllData() {
   if(!confirm('คุณต้องการลบข้อมูลการเทรดและบันทึกทั้งหมดในบัญชีนี้ใช่หรือไม่? การดำเนินการนี้ไม่สามารถย้อนกลับได้')) return;
-  ['dosho_trades','dosho_journal','dosho_checklist','dosho_tag_pool','dosho_tags'].forEach(base => {
+  ['dosho_trades','dosho_journal','dosho_checklist','dosho_systems','dosho_active_system','dosho_tag_pool','dosho_tags'].forEach(base => {
     localStorage.removeItem(acctKey(base));
   });
-  trades = []; journal = {}; checklist = {entry:[],exit:[]}; selectedTags = []; defaultTags = [..._defaultTagPool];
-  renderDashboard(); renderCalendar(); renderTradeTable(); renderReports(); loadJournal(); renderChecklist(); renderTags();
+  trades = []; journal = {}; checklist = {entry:[],exit:[]}; tradingSystems = []; activeSystemId = '';
+  selectedTags = []; defaultTags = [..._defaultTagPool];
+  renderDashboard(); renderCalendar(); renderTradeTable(); renderReports(); loadJournal(); loadSystems(); renderTags();
 }
 
 /* ═══ DAY DETAIL MODAL ═══ */
@@ -2243,6 +2380,7 @@ function switchAccount(id) {
   trades = JSON.parse(localStorage.getItem(acctKey('dosho_trades')) || '[]');
   journal = JSON.parse(localStorage.getItem(acctKey('dosho_journal')) || '{}');
   checklist = JSON.parse(localStorage.getItem(acctKey('dosho_checklist')) || '{"entry":[],"exit":[]}');
+  tradingSystems = []; activeSystemId = '';
   const tagPoolRaw = localStorage.getItem(acctKey('dosho_tag_pool'));
   if(tagPoolRaw) {
     try { defaultTags = JSON.parse(tagPoolRaw); } catch(e) { defaultTags = [..._defaultTagPool]; }
@@ -2252,7 +2390,7 @@ function switchAccount(id) {
   try { selectedTags = tagsRaw ? JSON.parse(tagsRaw) : []; } catch(e) { selectedTags = []; }
   activeJournalDate = new Date().toISOString().slice(0,10);
   renderDashboard(); renderCalendar(); renderTradeTable(); renderReports();
-  loadSettings(); loadJournal(); renderChecklist(); renderTags();
+  loadSettings(); loadJournal(); loadSystems(); renderTags();
   renderAccountsList();
 }
 
@@ -2306,7 +2444,7 @@ function saveAccountModal() {
 function deleteAccount(id) {
   if(accounts.length <= 1) { alert('ต้องมีบัญชีอย่างน้อย 1 บัญชี'); return; }
   if(!confirm('ลบบัญชีนี้? ข้อมูลการเทรดในบัญชีนี้จะถูกลบด้วย')) return;
-  ['dosho_trades','dosho_journal','dosho_checklist','dosho_tag_pool','dosho_tags'].forEach(base => {
+  ['dosho_trades','dosho_journal','dosho_checklist','dosho_systems','dosho_active_system','dosho_tag_pool','dosho_tags'].forEach(base => {
     const key = id === 'default' ? base : base + '_' + id;
     localStorage.removeItem(key);
   });
@@ -2531,9 +2669,11 @@ function parseMT5CSV(text) {
 /* ═══ BACKUP / RESTORE ═══ */
 function exportBackup() {
   const data = {
-    version: 1,
+    version: 2,
     exportedAt: new Date().toISOString(),
     trades, journal, settings, checklist,
+    systems: tradingSystems,
+    activeSystem: activeSystemId,
     tags: selectedTags,
     tagPool: defaultTags,
   };
@@ -2569,7 +2709,17 @@ function handleBackupImport(e) {
       localStorage.setItem('dosho_checklist', JSON.stringify(checklist));
       localStorage.setItem('dosho_tags',      JSON.stringify(selectedTags));
       localStorage.setItem('dosho_tag_pool',  JSON.stringify(defaultTags));
-      loadSettings(); loadJournal(); renderChecklist(); renderTags();
+      if (data.systems && Array.isArray(data.systems) && data.systems.length) {
+        tradingSystems = data.systems;
+        activeSystemId = data.activeSystem || tradingSystems[0].id;
+        localStorage.setItem(acctKey('dosho_systems'), JSON.stringify(tradingSystems));
+        localStorage.setItem(acctKey('dosho_active_system'), activeSystemId);
+      } else {
+        tradingSystems = []; activeSystemId = '';
+        localStorage.removeItem(acctKey('dosho_systems'));
+        localStorage.removeItem(acctKey('dosho_active_system'));
+      }
+      loadSettings(); loadJournal(); loadSystems(); renderTags();
       renderDashboard(); renderCalendar(); renderTradeTable(); renderReports();
       alert('✓ กู้คืนข้อมูลสำเร็จ!');
     } catch(err) {

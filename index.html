@@ -81,7 +81,7 @@ body{font-family:'Mitr',-apple-system,sans-serif;background:var(--bg);color:var(
 .card-bd{padding:14px 16px}
 
 /* ─── CALENDAR ─── */
-.dash-grid{display:grid;grid-template-columns:1fr;grid-template-rows:1fr;gap:14px;flex:1 1 0;min-height:0;align-items:stretch;overflow:hidden}
+.dash-grid{display:grid;grid-template-columns:1fr 300px;grid-template-rows:1fr;gap:14px;flex:1 1 0;min-height:0;align-items:stretch;overflow:hidden}
 .cal-nav-row{display:flex;align-items:center;gap:8px;padding:10px 14px;border-bottom:1px solid var(--border2);flex-shrink:0}
 .cal-arr{width:22px;height:22px;border-radius:5px;background:transparent;border:1px solid var(--border);color:var(--text2);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:13px;transition:background .12s}
 .cal-arr:hover{background:var(--surface2)}
@@ -366,7 +366,7 @@ body{font-family:'Mitr',-apple-system,sans-serif;background:var(--bg);color:var(
 .kpi-rr-loss-lbl{font-size:11px;font-weight:500;color:var(--red);white-space:nowrap}
 
 /* ─── UPDATED DASH GRID ─── */
-.dash-grid{display:grid;grid-template-columns:1fr;grid-template-rows:1fr;gap:14px;flex:1 1 0;min-height:0;align-items:stretch;overflow:hidden}
+.dash-grid{display:grid;grid-template-columns:1fr 300px;grid-template-rows:1fr;gap:14px;flex:1 1 0;min-height:0;align-items:stretch;overflow:hidden}
 
 /* ─── ZELLA SCORE RIGHT PANEL ─── */
 .zella-card{display:flex;flex-direction:column;gap:0}
@@ -587,6 +587,14 @@ body{font-family:'Mitr',-apple-system,sans-serif;background:var(--bg);color:var(
               </div>
               <div class="cal-weekly" id="cal-weekly"></div>
             </div>
+          </div>
+
+          <!-- Recent Trades -->
+          <div class="card" style="display:flex;flex-direction:column;min-height:0">
+            <div class="card-hd">
+              <span class="card-title">เทรดล่าสุด</span>
+            </div>
+            <div id="recent-trades-list" style="flex:1;overflow-y:auto"></div>
           </div>
 
         </div>

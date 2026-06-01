@@ -1,4 +1,4 @@
-name: Build MT5 Bridge
+name: Build MT5 Sync
 
 on:
   push:
@@ -24,14 +24,15 @@ jobs:
       - name: Install dependencies & build
         shell: pwsh
         run: |
-          pip install MetaTrader5 flask flask-cors pystray Pillow pyinstaller
+          pip install MetaTrader5 customtkinter pyinstaller
           Set-Location mt5_bridge
           pyinstaller `
             --onefile `
             --windowed `
-            --name mt5_bridge `
-            --hidden-import pystray._win32 `
-            mt5_bridge.py
+            --name mt5_sync `
+            --hidden-import customtkinter `
+            --collect-all customtkinter `
+            mt5_sync.py
 
       - name: Publish to GitHub Releases
         shell: pwsh
@@ -40,15 +41,19 @@ jobs:
         run: |
           $sha = "${{ github.sha }}".Substring(0, 7)
           $notes = @"
-          ## MT5 Bridge
+          ## MT5 Sync
 
-          **ดาวน์โหลด mt5_bridge.exe แล้วดับเบิ้ลคลิกรัน** — ไม่ต้องติดตั้ง Python
+          **ดาวน์โหลด mt5_sync.exe แล้วดับเบิ้ลคลิกรัน** — ไม่ต้องติดตั้ง Python
+
+          - เลือกช่วงเวลาและตั้ง Auto sync
+          - กด **Sync & Copy**
+          - ไปกด **Paste MT5** ใน Dosho
 
           Built from commit ``$sha``
           "@
 
           gh release delete latest --yes --cleanup-tag 2>$null
-          gh release create latest mt5_bridge/dist/mt5_bridge.exe `
-            --title "MT5 Bridge — Latest" `
+          gh release create latest mt5_bridge/dist/mt5_sync.exe `
+            --title "MT5 Sync — Latest" `
             --notes $notes `
             --latest

@@ -1,3 +1,6 @@
 MetaTrader5
-customtkinter
+flask
+flask-cors
+pystray
+Pillow
 pyinstaller

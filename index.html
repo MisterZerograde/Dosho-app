@@ -560,9 +560,10 @@ body{font-family:'Mitr',-apple-system,sans-serif;background:var(--bg);color:var(
     <button class="hamburger" onclick="toggleSidebar()">☰</button>
     <div class="tb-title" id="tb-title">แดชบอร์ด</div>
     <div class="tb-spacer"></div>
-    <button id="btn-paste-mt5" class="btn btn-ghost" style="cursor:pointer;display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;padding:7px 13px;margin-right:6px" title="วางข้อมูลจาก MT5 Sync (เปิดโปรแกรม mt5_sync.exe แล้วกด Sync &amp; Copy ก่อน)" onclick="pasteMT5()">
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/></svg>
-      <span class="btn-label">Paste MT5</span>
+    <button id="btn-sync-mt5" class="btn btn-ghost" style="cursor:pointer;display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;padding:7px 13px;margin-right:6px" onclick="syncMT5()">
+      <span id="mt5-dot" style="width:7px;height:7px;border-radius:50%;background:#6b7280;flex-shrink:0;transition:background .4s"></span>
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0018.49 15"/></svg>
+      <span class="btn-label">Sync MT5</span>
     </button>
     <label class="btn btn-ghost" style="cursor:pointer;display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;padding:7px 13px;margin-right:6px" title="นำเข้า CSV จาก MT5">
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
@@ -1128,6 +1129,8 @@ function init() {
   const localNow = toLocalDT(new Date());
   document.getElementById('f-open-dt').value = localNow;
 
+  checkMT5Bridge();
+  setInterval(checkMT5Bridge, 30000);
 }
 
 function toLocalDT(d) {
@@ -2705,8 +2708,34 @@ function handleCSVImport(e) {
   reader.readAsArrayBuffer(file);
 }
 
-/* ── MT5 Clipboard paste ── */
-const _MT5_DOWNLOAD_URL = 'https://github.com/MisterZerograde/Dosho-app/releases/download/latest/mt5_sync.exe';
+/* ── MT5 Bridge ── */
+const _MT5_DOWNLOAD_URL = 'https://github.com/MisterZerograde/Dosho-app/releases/download/latest/mt5_bridge.exe';
+
+function _updateDot(state, title) {
+  const dot = document.getElementById('mt5-dot');
+  if (!dot) return;
+  const colors = { online: '#22c55e', warn: '#f59e0b', offline: '#6b7280', syncing: '#a78bfa' };
+  dot.style.background = colors[state] || colors.offline;
+  const btn = document.getElementById('btn-sync-mt5');
+  if (btn) btn.title = title;
+}
+
+async function checkMT5Bridge() {
+  try {
+    const res = await fetch('http://127.0.0.1:5678/status', { signal: AbortSignal.timeout(2000) });
+    if (!res.ok) throw new Error();
+    const d = await res.json();
+    if (d.connected) {
+      const bal = d.balance != null ? `  Balance: ${d.balance} ${d.currency || ''}` : '';
+      const cfg = d.config ? `  •  ${d.config.period_days}d` + (d.config.interval_secs > 0 ? ` / auto ${d.config.interval_secs/60}m` : '') : '';
+      _updateDot('online', `MT5 Bridge พร้อมใช้งาน\n#${d.login} @ ${d.server}${bal}${cfg}`);
+    } else {
+      _updateDot('warn', 'Bridge กำลังทำงาน — MT5 ยังไม่ได้เชื่อมต่อ\nเปิด MetaTrader 5 แล้วล็อกอิน');
+    }
+  } catch {
+    _updateDot('offline', 'MT5 Bridge ออฟไลน์\nคลิกเพื่อดูวิธีติดตั้ง');
+  }
+}
 
 function _showMT5SetupModal() {
   if (document.getElementById('_mt5-setup-modal')) return;
@@ -2720,7 +2749,7 @@ function _showMT5SetupModal() {
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0018.49 15"/></svg>
         </div>
         <div>
-          <div style="font-size:17px;font-weight:700">ตั้งค่า MT5 Sync</div>
+          <div style="font-size:17px;font-weight:700">ตั้งค่า MT5 Bridge</div>
           <div style="font-size:12px;color:var(--text3)">ทำครั้งเดียว ใช้ได้ตลอด</div>
         </div>
       </div>
@@ -2730,10 +2759,10 @@ function _showMT5SetupModal() {
         <div style="display:flex;gap:13px;align-items:flex-start">
           <span style="background:var(--purple);color:#fff;border-radius:50%;width:24px;height:24px;min-width:24px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700">1</span>
           <div>
-            <div style="font-size:13px;font-weight:600;margin-bottom:6px">ดาวน์โหลด mt5_sync.exe</div>
+            <div style="font-size:13px;font-weight:600;margin-bottom:6px">ดาวน์โหลด mt5_bridge.exe</div>
             <a href="${_MT5_DOWNLOAD_URL}" target="_blank" download style="display:inline-flex;align-items:center;gap:7px;background:var(--purple);color:#fff;padding:9px 16px;border-radius:8px;font-size:13px;font-weight:600;text-decoration:none">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-              ดาวน์โหลด mt5_sync.exe
+              ดาวน์โหลด mt5_bridge.exe
             </a>
             <div style="font-size:11px;color:var(--text3);margin-top:5px">ไม่ต้องติดตั้ง Python · ใช้งานบน Windows เท่านั้น</div>
           </div>
@@ -2748,15 +2777,15 @@ function _showMT5SetupModal() {
         <div style="display:flex;gap:13px;align-items:flex-start">
           <span style="background:var(--purple);color:#fff;border-radius:50%;width:24px;height:24px;min-width:24px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700">3</span>
           <div>
-            <div style="font-size:13px;font-weight:600;margin-bottom:2px">เปิด mt5_sync.exe → กด Sync &amp; Copy</div>
-            <div style="font-size:12px;color:var(--text3)">เลือกช่วงเวลา ตั้ง Auto sync แล้วกด Sync &amp; Copy ข้อมูลจะถูกคัดลอกอัตโนมัติ</div>
+            <div style="font-size:13px;font-weight:600;margin-bottom:2px">ดับเบิ้ลคลิก mt5_bridge.exe</div>
+            <div style="font-size:12px;color:var(--text3)">โปรแกรมจะเริ่มทำงานใน System Tray — ตั้งค่าช่วงเวลาและ Auto sync ได้จากเมนู</div>
           </div>
         </div>
         <div style="display:flex;gap:13px;align-items:flex-start">
           <span style="background:var(--purple);color:#fff;border-radius:50%;width:24px;height:24px;min-width:24px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700">4</span>
           <div>
-            <div style="font-size:13px;font-weight:600;margin-bottom:2px">กลับมากด Paste MT5 ใน Dosho</div>
-            <div style="font-size:12px;color:var(--text3)">Browser จะขอสิทธิ์ Clipboard ครั้งแรก → กด <b>Allow</b></div>
+            <div style="font-size:13px;font-weight:600;margin-bottom:2px">กลับมากด Sync MT5 ใน Dosho</div>
+            <div style="font-size:12px;color:var(--text3)">ดอทสีเขียว <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#22c55e;vertical-align:middle"></span> = Bridge พร้อมใช้งาน</div>
           </div>
         </div>
       </div>
@@ -2768,28 +2797,27 @@ function _showMT5SetupModal() {
 
       <div style="display:flex;gap:10px">
         <button onclick="document.getElementById('_mt5-setup-modal').remove()" style="flex:1;padding:10px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text);cursor:pointer;font-size:13px;font-weight:600">ปิด</button>
-        <button onclick="document.getElementById('_mt5-setup-modal').remove();pasteMT5()" style="flex:1;padding:10px;border-radius:8px;border:none;background:var(--purple);color:#fff;cursor:pointer;font-size:13px;font-weight:600">ลองวางข้อมูล</button>
+        <button onclick="checkMT5Bridge();document.getElementById('_mt5-setup-modal').remove()" style="flex:1;padding:10px;border-radius:8px;border:none;background:var(--purple);color:#fff;cursor:pointer;font-size:13px;font-weight:600">ตรวจสอบอีกครั้ง</button>
       </div>
     </div>`;
   ov.addEventListener('click', e => { if (e.target === ov) ov.remove(); });
   document.body.appendChild(ov);
 }
 
-async function pasteMT5() {
-  const btn = document.getElementById('btn-paste-mt5');
+async function syncMT5() {
+  const btn = document.getElementById('btn-sync-mt5');
   const lbl = btn.querySelector('.btn-label');
   btn.disabled = true;
-  lbl.textContent = 'กำลังอ่าน...';
+  lbl.textContent = 'กำลังซิงค์...';
+  _updateDot('syncing', 'กำลังซิงค์...');
   try {
-    const text = await navigator.clipboard.readText();
-    let data;
-    try { data = JSON.parse(text); } catch {
-      throw new Error('no-data');
+    const res = await fetch('http://127.0.0.1:5678/sync', { signal: AbortSignal.timeout(15000) });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error || `HTTP ${res.status}`);
     }
-    if (data.source !== 'mt5_sync' || !Array.isArray(data.trades)) {
-      throw new Error('no-data');
-    }
-    const imported = data.trades;
+    const data = await res.json();
+    const imported = data.trades || [];
     let added = 0;
     imported.forEach(t => {
       const dup = trades.some(x => x.openDt === t.openDt && x.symbol === t.symbol && Math.abs(x.pnl - t.pnl) < 0.01);
@@ -2798,6 +2826,7 @@ async function pasteMT5() {
     trades.sort((a, b) => new Date(a.openDt) - new Date(b.openDt));
     persist();
     renderDashboard(); renderCalendar(); renderTradeTable(); renderReports();
+    await checkMT5Bridge();
     _showSyncToast(
       added > 0
         ? `✓ เพิ่ม ${added} รายการใหม่  (ข้าม ${imported.length - added} ซ้ำ)`
@@ -2805,14 +2834,12 @@ async function pasteMT5() {
       false
     );
   } catch (e) {
-    if (e.message === 'no-data') {
-      _showMT5SetupModal();
-    } else {
-      _showSyncToast('✗ ' + e.message, true);
-    }
+    const offline = e instanceof TypeError || e.name === 'AbortError' || e.name === 'TimeoutError';
+    if (offline) { _updateDot('offline', 'MT5 Bridge ออฟไลน์'); _showMT5SetupModal(); }
+    else { await checkMT5Bridge(); _showSyncToast('✗ ' + e.message, true); }
   } finally {
     btn.disabled = false;
-    lbl.textContent = 'Paste MT5';
+    lbl.textContent = 'Sync MT5';
   }
 }
 

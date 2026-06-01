@@ -2727,40 +2727,69 @@ async function checkMT5Bridge() {
   }
 }
 
+const _MT5_DOWNLOAD_URL = 'https://github.com/MisterZerograde/Dosho-app/releases/download/latest/mt5_bridge.exe';
+
 function _showMT5SetupModal() {
   if (document.getElementById('_mt5-setup-modal')) return;
   const ov = document.createElement('div');
   ov.id = '_mt5-setup-modal';
   ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9998;display:flex;align-items:center;justify-content:center;padding:16px';
   ov.innerHTML = `
-    <div style="background:var(--surface);border-radius:16px;padding:28px 28px 24px;max-width:420px;width:100%;box-shadow:0 24px 64px rgba(0,0,0,.4)">
+    <div style="background:var(--surface);border-radius:16px;padding:28px 28px 24px;max-width:440px;width:100%;box-shadow:0 24px 64px rgba(0,0,0,.4)">
       <div style="display:flex;align-items:center;gap:12px;margin-bottom:6px">
         <div style="width:40px;height:40px;border-radius:10px;background:var(--purple);display:flex;align-items:center;justify-content:center;flex-shrink:0">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0018.49 15"/></svg>
         </div>
         <div>
           <div style="font-size:17px;font-weight:700">ตั้งค่า MT5 Bridge</div>
-          <div style="font-size:12px;color:var(--text3)">ไม่พบโปรแกรม Bridge ที่กำลังทำงาน</div>
+          <div style="font-size:12px;color:var(--text3)">ทำครั้งเดียว ใช้ได้ตลอด</div>
         </div>
       </div>
       <div style="height:1px;background:var(--border);margin:16px 0"></div>
-      <div style="display:flex;flex-direction:column;gap:14px;margin-bottom:22px">
-        ${[
-          ['1','เปิด MetaTrader 5','ต้องล็อกอินเข้า Terminal ไว้ก่อน'],
-          ['2','รัน mt5_bridge.exe','ดาวน์โหลดจาก GitHub แล้วดับเบิ้ลคลิก หรือรัน <code style="background:var(--surface2);padding:1px 5px;border-radius:4px;font-size:11px">python mt5_bridge.py</code>'],
-          ['3','กลับมากด Sync MT5','ดอทสีเขียว <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#22c55e;vertical-align:middle"></span> = พร้อมซิงค์'],
-        ].map(([n,h,b]) => `
-          <div style="display:flex;gap:13px;align-items:flex-start">
-            <span style="background:var(--purple);color:#fff;border-radius:50%;width:24px;height:24px;min-width:24px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700">${n}</span>
-            <div><div style="font-size:13px;font-weight:600;margin-bottom:2px">${h}</div><div style="font-size:12px;color:var(--text3);line-height:1.5">${b}</div></div>
-          </div>`).join('')}
+
+      <div style="display:flex;flex-direction:column;gap:14px;margin-bottom:20px">
+        <div style="display:flex;gap:13px;align-items:flex-start">
+          <span style="background:var(--purple);color:#fff;border-radius:50%;width:24px;height:24px;min-width:24px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700">1</span>
+          <div>
+            <div style="font-size:13px;font-weight:600;margin-bottom:6px">ดาวน์โหลด mt5_bridge.exe</div>
+            <a href="${_MT5_DOWNLOAD_URL}" target="_blank" download style="display:inline-flex;align-items:center;gap:7px;background:var(--purple);color:#fff;padding:9px 16px;border-radius:8px;font-size:13px;font-weight:600;text-decoration:none">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+              ดาวน์โหลด mt5_bridge.exe
+            </a>
+            <div style="font-size:11px;color:var(--text3);margin-top:5px">ไม่ต้องติดตั้ง Python · ใช้งานบน Windows เท่านั้น</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:13px;align-items:flex-start">
+          <span style="background:var(--purple);color:#fff;border-radius:50%;width:24px;height:24px;min-width:24px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700">2</span>
+          <div>
+            <div style="font-size:13px;font-weight:600;margin-bottom:2px">เปิด MetaTrader 5 และล็อกอิน</div>
+            <div style="font-size:12px;color:var(--text3)">ต้องเปิด MT5 Terminal ไว้ก่อน</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:13px;align-items:flex-start">
+          <span style="background:var(--purple);color:#fff;border-radius:50%;width:24px;height:24px;min-width:24px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700">3</span>
+          <div>
+            <div style="font-size:13px;font-weight:600;margin-bottom:2px">ดับเบิ้ลคลิก mt5_bridge.exe</div>
+            <div style="font-size:12px;color:var(--text3)">โปรแกรมจะติดตั้งตัวเองและตั้งค่า startup อัตโนมัติ ไม่ต้องเปิดใหม่ทุกครั้ง</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:13px;align-items:flex-start">
+          <span style="background:var(--purple);color:#fff;border-radius:50%;width:24px;height:24px;min-width:24px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700">4</span>
+          <div>
+            <div style="font-size:13px;font-weight:600;margin-bottom:2px">กลับมากด Sync MT5</div>
+            <div style="font-size:12px;color:var(--text3)">ดอทสีเขียว <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#22c55e;vertical-align:middle"></span> = พร้อมใช้งาน</div>
+          </div>
+        </div>
       </div>
-      <div style="background:var(--surface2);border-radius:8px;padding:10px 12px;margin-bottom:20px;font-size:12px;color:var(--text3)">
-        ใช้งานได้บน <b style="color:var(--text)">Chrome / Edge</b> เท่านั้น (ข้อจำกัดของ browser security)
+
+      <div style="background:var(--surface2);border-radius:8px;padding:9px 12px;margin-bottom:20px;font-size:12px;color:var(--text3);display:flex;align-items:center;gap:8px">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="flex-shrink:0;color:#f59e0b"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        ใช้งานได้บน <b style="color:var(--text)">&nbsp;Chrome&nbsp;</b> หรือ <b style="color:var(--text)">&nbsp;Edge&nbsp;</b> เท่านั้น · หากดาวน์โหลดแล้ว Windows แจ้งเตือน ให้กด <b style="color:var(--text)">"เก็บไว้"</b>
       </div>
+
       <div style="display:flex;gap:10px">
         <button onclick="document.getElementById('_mt5-setup-modal').remove()" style="flex:1;padding:10px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text);cursor:pointer;font-size:13px;font-weight:600">ปิด</button>
-        <button onclick="checkMT5Bridge();document.getElementById('_mt5-setup-modal').remove()" style="flex:1;padding:10px;border-radius:8px;border:none;background:var(--purple);color:#fff;cursor:pointer;font-size:13px;font-weight:600">ตรวจสอบอีกครั้ง</button>
+        <button onclick="checkMT5Bridge().then(()=>{ const s=document.getElementById('mt5-dot'); if(s&&s.style.background.includes('34')){ document.getElementById('_mt5-setup-modal').remove(); } })" style="flex:1;padding:10px;border-radius:8px;border:none;background:var(--purple);color:#fff;cursor:pointer;font-size:13px;font-weight:600">ตรวจสอบอีกครั้ง</button>
       </div>
     </div>`;
   ov.addEventListener('click', e => { if (e.target === ov) ov.remove(); });

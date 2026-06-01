@@ -150,7 +150,7 @@ body{font-family:'Mitr',-apple-system,sans-serif;background:var(--bg);color:var(
 .cum-wrap{padding:6px 14px 14px;height:120px}
 
 /* ─── RECENT TRADES MINI ─── */
-.rtrade-row{display:flex;align-items:center;gap:8px;padding:7px 14px;border-bottom:1px solid var(--border2);cursor:pointer;transition:background .12s}
+.rtrade-row{display:flex;align-items:center;gap:8px;padding:8px 14px;border-bottom:1px solid var(--border2);cursor:pointer;transition:background .12s}
 .rtrade-row:last-child{border-bottom:none}
 .rtrade-row:hover{background:var(--surface2)}
 .rtrade-sym{font-size:12px;font-weight:500;color:var(--text);min-width:52px}
@@ -1104,6 +1104,10 @@ function toLocalDT(d) {
   const pad = n => String(n).padStart(2,'0');
   return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
+function fmtBKK(dtStr, opts) {
+  if (!dtStr) return '—';
+  return new Date(dtStr).toLocaleString('th-TH', { timeZone: 'Asia/Bangkok', ...opts });
+}
 
 /* ═══ MODAL ═══ */
 let activeDir = 'BUY';
@@ -1353,11 +1357,18 @@ function renderRecentTrades() {
   el.innerHTML = recent.map(t => {
     const pnlColor = t.pnl >= 0 ? 'var(--green)' : 'var(--red)';
     const _d = getPnlDecimals(); const pnlStr = (t.pnl >= 0 ? '+' : '−') + Math.abs(t.pnl).toLocaleString('th-TH', {minimumFractionDigits:_d, maximumFractionDigits:_d}) + getCurrencySymbol();
-    const dateStr = t.openDt ? new Date(t.openDt).toLocaleDateString('th-TH', {month:'short', day:'numeric'}) : '—';
+    const dateStr = fmtBKK(t.openDt, {month:'short', day:'numeric'});
+    const timeStr = fmtBKK(t.openDt, {hour:'2-digit', minute:'2-digit'});
+    const lotStr = t.volume != null && t.volume !== '' ? t.volume + ' lot' : '';
+    const meta = [dateStr, timeStr, lotStr].filter(Boolean).join(' · ');
     return `<div class="rtrade-row" onclick="openTradeDetail('${t.id}')">
-      <span class="rtrade-sym">${t.symbol}</span>
-      <span class="ttype ${t.direction === 'BUY' ? 'b' : 's'}">${t.direction}</span>
-      <span class="rtrade-date">${dateStr}</span>
+      <div style="flex:1;min-width:0">
+        <div style="display:flex;align-items:center;gap:6px">
+          <span class="rtrade-sym">${t.symbol}</span>
+          <span class="ttype ${t.direction === 'BUY' ? 'b' : 's'}">${t.direction}</span>
+        </div>
+        <div style="font-size:10px;color:var(--text3);margin-top:2px">${meta}</div>
+      </div>
       <span class="rtrade-pnl" style="color:${pnlColor}">${pnlStr}</span>
     </div>`;
   }).join('');
@@ -1617,7 +1628,7 @@ function renderTradeTable() {
   empty.style.display='none';
 
   tbody.innerHTML = filtered.map(t => {
-    const dateStr = t.openDt ? new Date(t.openDt).toLocaleString('th-TH',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}) : '—';
+    const dateStr = fmtBKK(t.openDt, {month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
     const pnlCls = t.pnl >= 0 ? 'pnl-p' : 'pnl-n';
     const rowCls = t.pnl >= 0 ? 'tr-win' : 'tr-loss';
     const _pd = getPnlDecimals(); const pnlStr = (t.pnl>=0?'+':'-') + Math.abs(t.pnl).toLocaleString('th-TH',{minimumFractionDigits:_pd,maximumFractionDigits:_pd}) + getCurrencySymbol();
@@ -2261,7 +2272,7 @@ function openDayModal(dateStr) {
       </tr></thead>
       <tbody>
         ${dayTrades.map(t => {
-          const tm = new Date(t.openDt).toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'});
+          const tm = fmtBKK(t.openDt, {hour:'2-digit',minute:'2-digit'});
           const pc = t.pnl >= 0 ? 'pnl-p' : 'pnl-n';
           const ps = (t.pnl>=0?'+':'-') + Math.abs(t.pnl).toLocaleString('th-TH',{minimumFractionDigits:getPnlDecimals(),maximumFractionDigits:getPnlDecimals()}) + getCurrencySymbol();
           return `<tr>
@@ -2325,7 +2336,7 @@ function openSymbolModal(sym) {
       </tr></thead>
       <tbody>
         ${symTrades.map(t => {
-          const dateStr = t.openDt ? new Date(t.openDt).toLocaleString('th-TH',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}) : '—';
+          const dateStr = fmtBKK(t.openDt, {month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
           const pc = t.pnl >= 0 ? 'pnl-p' : 'pnl-n';
           const ps = (t.pnl>=0?'+':'-') + Math.abs(t.pnl).toLocaleString('th-TH',{minimumFractionDigits:getPnlDecimals(),maximumFractionDigits:getPnlDecimals()}) + getCurrencySymbol();
           return `<tr>
@@ -2349,7 +2360,7 @@ function openSymbolModal(sym) {
 function openTradeDetail(id) {
   const t = trades.find(x => x.id === id);
   if(!t) return;
-  const dateStr = t.openDt ? new Date(t.openDt).toLocaleString('th-TH',{weekday:'short',year:'numeric',month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}) : '—';
+  const dateStr = fmtBKK(t.openDt, {weekday:'short',year:'numeric',month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
   const pnlCls = t.pnl >= 0 ? 'var(--green)' : 'var(--red)';
   const pnlStr = (t.pnl >= 0 ? '+' : '−') + Math.abs(t.pnl).toLocaleString('th-TH',{minimumFractionDigits:getPnlDecimals(),maximumFractionDigits:getPnlDecimals()}) + getCurrencySymbol();
   document.getElementById('day-title').textContent = t.symbol + ' — รายละเอียดการเทรด';
@@ -2424,7 +2435,7 @@ function openWeekModal(wi, week, dayMap) {
       </tr></thead>
       <tbody>
         ${weekTrades.map(t => {
-          const ds = t.openDt ? new Date(t.openDt).toLocaleString('th-TH',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}) : '—';
+          const ds = fmtBKK(t.openDt, {month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
           const pc = t.pnl >= 0 ? 'pnl-p' : 'pnl-n';
           const ps = (t.pnl>=0?'+':'-') + Math.abs(t.pnl).toLocaleString('th-TH',{minimumFractionDigits:getPnlDecimals(),maximumFractionDigits:getPnlDecimals()}) + getCurrencySymbol();
           return `<tr>

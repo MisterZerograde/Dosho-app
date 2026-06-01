@@ -560,6 +560,10 @@ body{font-family:'Mitr',-apple-system,sans-serif;background:var(--bg);color:var(
     <button class="hamburger" onclick="toggleSidebar()">☰</button>
     <div class="tb-title" id="tb-title">แดชบอร์ด</div>
     <div class="tb-spacer"></div>
+    <button id="btn-sync-mt5" class="btn btn-ghost" style="cursor:pointer;display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;padding:7px 13px;margin-right:6px" title="ซิงค์ข้อมูลจาก MT5 Bridge (ต้องเปิด mt5_bridge.exe)" onclick="syncMT5()">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0018.49 15"/></svg>
+      <span class="btn-label">Sync MT5</span>
+    </button>
     <label class="btn btn-ghost" style="cursor:pointer;display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;padding:7px 13px;margin-right:6px" title="นำเข้า CSV จาก MT5">
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
       <span class="btn-label">Import MT5</span>
@@ -2685,6 +2689,54 @@ function handleCSVImport(e) {
     e.target.value = '';
   };
   reader.readAsArrayBuffer(file);
+}
+
+async function syncMT5() {
+  const btn = document.getElementById('btn-sync-mt5');
+  const lbl = btn.querySelector('.btn-label');
+  btn.disabled = true;
+  lbl.textContent = 'กำลังซิงค์...';
+  try {
+    const res = await fetch('http://127.0.0.1:5678/sync', { signal: AbortSignal.timeout(12000) });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error || `HTTP ${res.status}`);
+    }
+    const data = await res.json();
+    const imported = data.trades || [];
+    let added = 0;
+    imported.forEach(t => {
+      const dup = trades.some(x => x.openDt === t.openDt && x.symbol === t.symbol && Math.abs(x.pnl - t.pnl) < 0.01);
+      if (!dup) { trades.push(t); added++; }
+    });
+    trades.sort((a, b) => new Date(a.openDt) - new Date(b.openDt));
+    persist();
+    renderDashboard(); renderCalendar(); renderTradeTable(); renderReports();
+    showSyncToast(`✓ ซิงค์สำเร็จ เพิ่ม ${added} รายการใหม่ (ข้าม ${imported.length - added} ซ้ำ)`, false);
+  } catch (e) {
+    const offline = e instanceof TypeError || e.name === 'AbortError';
+    showSyncToast(offline ? '✗ ไม่พบ MT5 Bridge — กรุณาเปิด mt5_bridge.exe ก่อน' : '✗ ' + e.message, true);
+  } finally {
+    btn.disabled = false;
+    lbl.textContent = 'Sync MT5';
+  }
+}
+
+function showSyncToast(msg, isError) {
+  let el = document.getElementById('_sync-toast');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = '_sync-toast';
+    el.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);padding:10px 20px;border-radius:8px;font-size:13px;font-weight:600;z-index:9999;box-shadow:0 4px 16px rgba(0,0,0,.25);transition:opacity .3s;white-space:nowrap';
+    document.body.appendChild(el);
+  }
+  el.textContent = msg;
+  el.style.background = isError ? '#dc2626' : '#059669';
+  el.style.color = '#fff';
+  el.style.opacity = '1';
+  el.style.display = 'block';
+  clearTimeout(el._t);
+  el._t = setTimeout(() => { el.style.opacity = '0'; setTimeout(() => { el.style.display = 'none'; }, 300); }, 5000);
 }
 
 function parseMT5HTML(text) {

@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Dosho — บันทึกการเทรด</title>
+<script>(function(){if(localStorage.getItem('dosho_dark')==='true')document.documentElement.dataset.theme='dark';})()</script>
 <link href="https://fonts.googleapis.com/css2?family=Mitr:wght@200;300;400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <style>
@@ -21,8 +22,20 @@
   --text:#0f172a;--text2:#475569;--text3:#64748b;
   --sidebar:220px;--topbar:56px;
 }
+[data-theme="dark"]{
+  --bg:#0f1117;--surface:#1a1d2e;--surface2:#242744;--surface3:#2d3058;
+  --border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.04);
+  --sidebar-bg:#13161f;--sidebar-border:rgba(255,255,255,0.06);
+  --sidebar-text:#e2e8f0;--sidebar-text-dim:#64748b;
+  --sidebar-hover:rgba(99,102,241,0.12);--sidebar-active:rgba(99,102,241,0.18);
+  --sidebar-active-text:#818cf8;
+  --purple:#6366f1;--purple2:#818cf8;--purple-dim:rgba(99,102,241,0.15);
+  --green:#10b981;--green-dim:rgba(16,185,129,0.12);
+  --red:#f87171;--red-dim:rgba(248,113,113,0.12);--orange:#fbbf24;
+  --text:#f1f5f9;--text2:#94a3b8;--text3:#64748b;
+}
 html{height:100%}
-body{font-family:'Mitr',-apple-system,sans-serif;background:var(--bg);color:var(--text);height:100%;overflow:hidden;font-size:13px;line-height:1.4}
+body{font-family:'Mitr',-apple-system,sans-serif;background:var(--bg);color:var(--text);height:100%;overflow:hidden;font-size:13px;line-height:1.4;transition:background .2s,color .2s}
 .app{display:flex;height:100vh;height:100dvh}
 
 /* ─── SIDEBAR ─── */
@@ -340,7 +353,7 @@ body{font-family:'Mitr',-apple-system,sans-serif;background:var(--bg);color:var(
 .form-group{display:flex;flex-direction:column;gap:5px}
 .form-label{font-size:11px;font-weight:600;color:var(--text2);letter-spacing:.03em}
 .form-input{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:8px 12px;font-size:13px;color:var(--text);font-family:inherit;outline:none;transition:border-color .2s,box-shadow .2s,background .2s;width:100%}
-.form-input:focus{border-color:var(--purple);background:#fff;box-shadow:0 0 0 3px rgba(79,70,229,0.1)}
+.form-input:focus{border-color:var(--purple);background:var(--surface);box-shadow:0 0 0 3px rgba(79,70,229,0.1)}
 .form-input:hover:not(:focus){border-color:rgba(62,69,184,0.3)}
 .form-input::placeholder{color:var(--text3)}
 .form-textarea{resize:vertical;min-height:72px}
@@ -499,6 +512,7 @@ body{font-family:'Mitr',-apple-system,sans-serif;background:var(--bg);color:var(
     <div class="tb-title" id="tb-title">แดชบอร์ด</div>
     <span class="info-i" style="margin-left:2px" data-tip="KPI รายเดือน, ปฏิทินกำไร/ขาดทุน และกราฟ Equity Curve สะสม">i</span>
     <div class="tb-spacer"></div>
+    <button id="theme-toggle-btn" onclick="toggleTheme()" title="สลับธีม" style="width:32px;height:32px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text2);cursor:pointer;display:flex;align-items:center;justify-content:center;margin-right:6px;font-size:16px;transition:background .15s,color .15s,border-color .15s;flex-shrink:0" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background='transparent'">🌙</button>
     <label class="btn btn-ghost" style="cursor:pointer;display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;padding:7px 13px;margin-right:6px" title="นำเข้า CSV จาก MT5">
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
       Import MT5
@@ -763,6 +777,16 @@ body{font-family:'Mitr',-apple-system,sans-serif;background:var(--bg);color:var(
           <div class="card-hd"><span class="card-title">ตั้งค่าบัญชี</span></div>
           <div class="card-bd">
             <div class="form-group" style="margin-bottom:14px">
+              <label class="form-label">ธีม</label>
+              <div style="display:flex;align-items:center;gap:10px;padding:6px 0">
+                <span style="font-size:12px;color:var(--text2)">☀️ สว่าง</span>
+                <div id="theme-sw" onclick="toggleTheme()" style="width:40px;height:22px;border-radius:11px;cursor:pointer;position:relative;transition:background .2s;background:rgba(40,44,103,0.15)">
+                  <div style="width:18px;height:18px;border-radius:50%;background:#fff;position:absolute;top:2px;left:2px;transition:transform .2s;box-shadow:0 1px 3px rgba(0,0,0,.3)"></div>
+                </div>
+                <span style="font-size:12px;color:var(--text2)">🌙 มืด</span>
+              </div>
+            </div>
+            <div class="form-group" style="margin-bottom:14px">
               <label class="form-label">ชื่อผู้ใช้งาน</label>
               <input class="form-input" id="set-name" placeholder="ชื่อของคุณ" oninput="saveSettings()">
             </div>
@@ -972,6 +996,26 @@ let calYear, calMonth;
 let calShowWeekend = JSON.parse(localStorage.getItem('dosho_cal_weekend') ?? 'true');
 let activeJournalDate = new Date().toISOString().slice(0,10);
 let rptChartInst = null;
+let darkMode = localStorage.getItem('dosho_dark') === 'true';
+
+/* ═══ THEME ═══ */
+function applyTheme() {
+  document.documentElement.dataset.theme = darkMode ? 'dark' : '';
+  const btn = document.getElementById('theme-toggle-btn');
+  if(btn) btn.textContent = darkMode ? '☀️' : '🌙';
+  const sw = document.getElementById('theme-sw');
+  if(sw) {
+    sw.style.background = darkMode ? '#6366f1' : 'rgba(40,44,103,0.15)';
+    const knob = sw.querySelector('div');
+    if(knob) knob.style.transform = darkMode ? 'translateX(18px)' : 'translateX(0)';
+  }
+}
+function toggleTheme() {
+  darkMode = !darkMode;
+  localStorage.setItem('dosho_dark', darkMode);
+  applyTheme();
+  if(rptChartInst) renderReports();
+}
 
 /* ═══ HELPERS ═══ */
 function getCurrencySymbol() {
@@ -986,6 +1030,7 @@ function init() {
   calYear = now.getFullYear();
   calMonth = now.getMonth();
 
+  applyTheme();
   loadSettings();
   loadJournal();
   loadSystems();
@@ -1609,6 +1654,9 @@ function renderReports() {
     const data = sorted.map(t => { cum += t.pnl; return +cum.toFixed(2); });
     const isPos = cum >= 0;
     const color = isPos ? '#059669' : '#dc2626';
+    const isDark = document.documentElement.dataset.theme === 'dark';
+    const gridCol = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(40,44,103,0.05)';
+    const tickCol = isDark ? '#64748b' : '#64748b';
     rptChartInst = new Chart(ctx, {
       type:'line',
       data:{labels,datasets:[{data,borderColor:color,borderWidth:2,fill:true,
@@ -1616,7 +1664,7 @@ function renderReports() {
         pointRadius:0,tension:.4}]},
       options:{responsive:true,maintainAspectRatio:false,
         plugins:{legend:{display:false},tooltip:{mode:'index',intersect:false,backgroundColor:'#282C67',titleColor:'#CBD5E1',bodyColor:'#FFFFFF',callbacks:{label:i=>i.raw.toLocaleString('th-TH')+getCurrencySymbol()}}},
-        scales:{x:{grid:{color:'rgba(40, 44, 103, 0.05)'},ticks:{color:'#64748B',font:{size:10},maxTicksLimit:8}},y:{grid:{color:'rgba(40, 44, 103, 0.05)'},ticks:{color:'#64748B',font:{size:10},callback:v=>v.toLocaleString('th-TH')+getCurrencySymbol()}}}}
+        scales:{x:{grid:{color:gridCol},ticks:{color:tickCol,font:{size:10},maxTicksLimit:8}},y:{grid:{color:gridCol},ticks:{color:tickCol,font:{size:10},callback:v=>v.toLocaleString('th-TH')+getCurrencySymbol()}}}}
     });
   }
 }

@@ -773,6 +773,16 @@ body{font-family:'Mitr',-apple-system,sans-serif;background:var(--bg);color:var(
               <label class="form-label">ชื่อระบบเทรดหลัก</label>
               <input class="form-input" id="set-strategy" placeholder="เช่น ICT Model 3" oninput="saveSettings()">
             </div>
+            <div class="form-group" style="margin-bottom:14px">
+              <label class="form-label">ทศนิยม กำไร/ขาดทุน</label>
+              <select class="form-input" id="set-decimals" onchange="saveSettings()">
+                <option value="0">0 (เช่น 250)</option>
+                <option value="1">1 (เช่น 250.5)</option>
+                <option value="2">2 (เช่น 250.50)</option>
+                <option value="3">3 (เช่น 250.500)</option>
+                <option value="4">4 (เช่น 250.5000)</option>
+              </select>
+            </div>
             <div class="form-group">
               <label class="form-label">สกุลเงิน</label>
               <select class="form-input" id="set-currency" onchange="saveSettings()">
@@ -949,7 +959,7 @@ function acctKey(base, id) {
 
 let trades = JSON.parse(localStorage.getItem(acctKey('dosho_trades')) || '[]');
 let journal = JSON.parse(localStorage.getItem(acctKey('dosho_journal')) || '{}');
-let settings = JSON.parse(localStorage.getItem('dosho_settings') || '{"name":"Trader","balance":10000,"strategy":"ระบบเทรด","currency":"USD"}');
+let settings = JSON.parse(localStorage.getItem('dosho_settings') || '{"name":"Trader","balance":10000,"strategy":"ระบบเทรด","currency":"USD","decimals":2}');
 // sync settings from active account
 (function(){const a=accounts.find(x=>x.id===activeAccountId);if(a){settings.balance=a.balance;settings.currency=a.currency;settings.strategy=a.strategy;}})();
 let checklist = JSON.parse(localStorage.getItem(acctKey('dosho_checklist')) || '{"entry":[],"exit":[]}');
@@ -967,6 +977,7 @@ function getCurrencySymbol() {
   const symbols = { USD: '$', USC: '¢', EUR: '€', GBP: '£', JPY: '¥', THB: '฿' };
   return symbols[settings.currency] || '$';
 }
+function getPnlDecimals() { return parseInt(settings.decimals ?? 2); }
 
 /* ═══ INIT ═══ */
 function init() {
@@ -1167,7 +1178,7 @@ function renderDashboard() {
   const fmt = (v, pos) => {
     if(v === null || v === undefined) return '—';
     const abs = Math.abs(v);
-    const str = abs >= 1000 ? abs.toLocaleString('th-TH',{minimumFractionDigits:2,maximumFractionDigits:2})+getCurrencySymbol() : abs.toFixed(2)+getCurrencySymbol();
+    const d = getPnlDecimals(); const str = abs >= 1000 ? abs.toLocaleString('th-TH',{minimumFractionDigits:d,maximumFractionDigits:d})+getCurrencySymbol() : abs.toFixed(d)+getCurrencySymbol();
     return (v < 0 ? '−' : (pos ? '+' : '')) + str;
   };
 
@@ -1243,7 +1254,7 @@ function renderRecentTrades() {
   }
   el.innerHTML = recent.map(t => {
     const pnlColor = t.pnl >= 0 ? 'var(--green)' : 'var(--red)';
-    const pnlStr = (t.pnl >= 0 ? '+' : '−') + Math.abs(t.pnl).toLocaleString('th-TH', {minimumFractionDigits:0, maximumFractionDigits:0}) + getCurrencySymbol();
+    const _d = getPnlDecimals(); const pnlStr = (t.pnl >= 0 ? '+' : '−') + Math.abs(t.pnl).toLocaleString('th-TH', {minimumFractionDigits:_d, maximumFractionDigits:_d}) + getCurrencySymbol();
     const dateStr = t.openDt ? new Date(t.openDt).toLocaleDateString('th-TH', {month:'short', day:'numeric'}) : '—';
     return `<div class="rtrade-row" onclick="openTradeDetail('${t.id}')">
       <span class="rtrade-sym">${t.symbol}</span>
@@ -1260,7 +1271,7 @@ function renderStatsSummary() {
   if (!el) return;
   const s = calcStats(trades);
   const cur = getCurrencySymbol();
-  const fmtV = v => v === null || v === undefined ? '—' : Math.abs(v).toFixed(2) + cur;
+  const fmtV = v => v === null || v === undefined ? '—' : Math.abs(v).toFixed(getPnlDecimals()) + cur;
   const row = (lbl, val, color, onclick) =>
     `<div style="display:flex;align-items:center;justify-content:space-between;padding:7px 14px;border-bottom:1px solid var(--border2);${onclick?'cursor:pointer;':''}transition:background .12s" ${onclick?`onclick="${onclick}" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background=''"`:''}>
       <span style="font-size:11px;color:var(--text2)">${lbl}</span>
@@ -1273,14 +1284,14 @@ function renderStatsSummary() {
   const g = 'var(--green)', r = 'var(--red)';
   el.innerHTML = [
     row('จำนวนครั้งที่เทรด', trades.length + ' ครั้ง'),
-    row('กำไร/ขาดทุนสุทธิ ⓘ', (s.netPnl >= 0 ? '+' : '−') + Math.abs(s.netPnl).toFixed(2) + cur, s.netPnl >= 0 ? g : r, "openFormulaModal('pnl')"),
+    row('กำไร/ขาดทุนสุทธิ ⓘ', (s.netPnl >= 0 ? '+' : '−') + Math.abs(s.netPnl).toFixed(getPnlDecimals()) + cur, s.netPnl >= 0 ? g : r, "openFormulaModal('pnl')"),
     row('อัตราการชนะ (Win Rate) ⓘ', s.wr.toFixed(1) + '%', s.wr >= 50 ? g : r, "openFormulaModal('wr')"),
     row('ปัจจัยการทำกำไร (Profit Factor) ⓘ', s.pf === Infinity ? '∞' : s.pf !== null ? s.pf.toFixed(2) : '—', s.pf >= 1 ? g : r, "openFormulaModal('pf')"),
     row('Risk Reward เฉลี่ย ⓘ', s.avgLoss > 0 ? (s.avgWin/s.avgLoss).toFixed(2) : '—', s.avgLoss > 0 && s.avgWin/s.avgLoss >= 1 ? g : null, "openFormulaModal('rr')"),
     row('กำไรเฉลี่ยต่อไม้ที่ชนะ', fmtV(s.avgWin), g),
     row('ขาดทุนเฉลี่ยต่อไม้ที่แพ้', fmtV(s.avgLoss), r),
-    row('ไม้ที่ได้กำไรสูงสุด', (s.best >= 0 ? '+' : '') + s.best.toFixed(2) + cur, g),
-    row('ไม้ที่ขาดทุนสูงสุด', s.worst.toFixed(2) + cur, r),
+    row('ไม้ที่ได้กำไรสูงสุด', (s.best >= 0 ? '+' : '') + s.best.toFixed(getPnlDecimals()) + cur, g),
+    row('ไม้ที่ขาดทุนสูงสุด', s.worst.toFixed(getPnlDecimals()) + cur, r),
     row('ชนะติดต่อกันสูงสุด', s.maxW + ' รายการ', g),
     row('แพ้ติดต่อกันสูงสุด', s.maxL + ' รายการ', r),
     row('Sharpe Ratio', s.sharpe !== null ? s.sharpe : '—', s.sharpe > 0 ? g : null),
@@ -1292,8 +1303,8 @@ function renderStatsSummary() {
 function openFormulaModal(type) {
   const s = calcStats(trades);
   const cur = getCurrencySymbol();
-  const fmt = v => v !== null && v !== undefined ? Math.abs(v).toFixed(2) + cur : '—';
-  const fmtN = v => v !== null && v !== undefined ? (v >= 0 ? '+' : '−') + Math.abs(v).toFixed(2) + cur : '—';
+  const fmt = v => v !== null && v !== undefined ? Math.abs(v).toFixed(getPnlDecimals()) + cur : '—';
+  const fmtN = v => v !== null && v !== undefined ? (v >= 0 ? '+' : '−') + Math.abs(v).toFixed(getPnlDecimals()) + cur : '—';
 
   const titles = { pnl:'กำไร/ขาดทุนสุทธิ', pf:'ปัจจัยการทำกำไร (Profit Factor)', wr:'อัตราการชนะ (Win Rate)', rr:'Risk Reward เฉลี่ย' };
   document.getElementById('day-title').textContent = titles[type] || 'สูตรคำนวณ';
@@ -1467,9 +1478,9 @@ function renderCalendar() {
 }
 
 function fmtMoney(v) {
-  const abs = Math.abs(v);
-  if(abs >= 1000) return (Math.abs(v)/1000).toFixed(abs>=10000?1:2)+'K'+getCurrencySymbol();
-  return abs.toFixed(abs < 10 ? 2 : 0)+getCurrencySymbol();
+  const abs = Math.abs(v); const d = getPnlDecimals();
+  if(abs >= 1000) return (Math.abs(v)/1000).toFixed(abs>=10000?1:Math.min(d,2))+'K'+getCurrencySymbol();
+  return abs.toFixed(abs < 10 ? d : Math.max(d-1,0))+getCurrencySymbol();
 }
 function fmtMoneyK(v) {
   const abs = Math.abs(v);
@@ -1511,7 +1522,7 @@ function renderTradeTable() {
     const dateStr = t.openDt ? new Date(t.openDt).toLocaleString('th-TH',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}) : '—';
     const pnlCls = t.pnl >= 0 ? 'pnl-p' : 'pnl-n';
     const rowCls = t.pnl >= 0 ? 'tr-win' : 'tr-loss';
-    const pnlStr = (t.pnl>=0?'+':'') + Math.abs(t.pnl).toLocaleString('th-TH',{minimumFractionDigits:2,maximumFractionDigits:2}) + getCurrencySymbol();
+    const _pd = getPnlDecimals(); const pnlStr = (t.pnl>=0?'+':'') + Math.abs(t.pnl).toLocaleString('th-TH',{minimumFractionDigits:_pd,maximumFractionDigits:_pd}) + getCurrencySymbol();
     return `<tr class="${rowCls}" style="cursor:pointer" onclick="openTradeDetail('${t.id}')">
       <td><span class="sym">${t.symbol}</span>${t.tag?` <span style="margin-left:6px; display:inline-flex; gap:4px">${renderTradeTags(t.tag)}</span>`:''}
       </td>
@@ -1535,8 +1546,9 @@ function renderTradeTable() {
 /* ═══ REPORTS ═══ */
 function renderReports() {
   const s = calcStats(trades);
-  const fmt = v => v !== null && v !== undefined ? (v>=0?'+':'') + Math.abs(v).toLocaleString('th-TH',{minimumFractionDigits:2,maximumFractionDigits:2}) + getCurrencySymbol() : '—';
-  const fmtPlain = v => v !== null && v !== undefined ? Math.abs(v).toLocaleString('th-TH',{minimumFractionDigits:2,maximumFractionDigits:2}) + getCurrencySymbol() : '—';
+  const _rD = getPnlDecimals();
+  const fmt = v => v !== null && v !== undefined ? (v>=0?'+':'') + Math.abs(v).toLocaleString('th-TH',{minimumFractionDigits:_rD,maximumFractionDigits:_rD}) + getCurrencySymbol() : '—';
+  const fmtPlain = v => v !== null && v !== undefined ? Math.abs(v).toLocaleString('th-TH',{minimumFractionDigits:_rD,maximumFractionDigits:_rD}) + getCurrencySymbol() : '—';
   const dash = '—';
 
   document.getElementById('r-trades').textContent = trades.length || dash;
@@ -1544,8 +1556,8 @@ function renderReports() {
   document.getElementById('r-pnl').className = 'rpt-stat-val ' + (s && s.netPnl >= 0 ? 'green' : s ? 'red' : '');
   document.getElementById('r-wr').textContent = s ? s.wr.toFixed(1)+'%' : dash;
   document.getElementById('r-pf').textContent = s ? (s.pf===Infinity?'∞':s.pf!==null?s.pf.toFixed(2):dash) : dash;
-  document.getElementById('r-avgwin').textContent = s && s.wins.length ? s.avgWin.toFixed(2)+getCurrencySymbol() : dash;
-  document.getElementById('r-avgloss').textContent = s && s.losses.length ? s.avgLoss.toFixed(2)+getCurrencySymbol() : dash;
+  document.getElementById('r-avgwin').textContent = s && s.wins.length ? s.avgWin.toFixed(_rD)+getCurrencySymbol() : dash;
+  document.getElementById('r-avgloss').textContent = s && s.losses.length ? s.avgLoss.toFixed(_rD)+getCurrencySymbol() : dash;
   document.getElementById('r-best').textContent = s ? fmt(s.best) : dash;
   document.getElementById('r-worst').textContent = s ? fmt(s.worst) : dash;
   document.getElementById('r-streak').textContent = s ? s.maxW + ' รายการ' : dash;
@@ -1575,7 +1587,7 @@ function renderReports() {
       <div style="display:flex;justify-content:space-between;align-items:center;font-size:12px;margin-bottom:5px">
         <span style="font-weight:500;color:var(--text);display:flex;align-items:center;gap:5px">${sym}<span style="font-size:10px;color:var(--text3);font-weight:400">↗ ดูรายการเทรด</span></span>
         <span style="color:var(--text2)">${d.count} รายการ &nbsp;·&nbsp; ${wr}% WR</span>
-        <span style="font-weight:500;color:${isPos?'var(--green)':'var(--red)'}">${isPos?'+':''}${Math.abs(d.pnl).toFixed(2)}${getCurrencySymbol()}</span>
+        <span style="font-weight:500;color:${isPos?'var(--green)':'var(--red)'}">${isPos?'+':''}${Math.abs(d.pnl).toFixed(_rD)}${getCurrencySymbol()}</span>
       </div>
       <div style="height:5px;background:var(--surface3);border-radius:3px">
         <div style="height:100%;width:${pct}%;background:${isPos?'var(--green)':'var(--red)'};border-radius:3px"></div>
@@ -2077,15 +2089,18 @@ function loadSettings() {
   document.getElementById('set-balance').value = settings.balance || '';
   document.getElementById('set-strategy').value = settings.strategy || '';
   document.getElementById('set-currency').value = settings.currency || 'USD';
+  document.getElementById('set-decimals').value = settings.decimals ?? 2;
   document.getElementById('lbl-set-balance').textContent = 'เงินทุนเริ่มต้น (' + getCurrencySymbol() + ')';
   updateSidebar();
 }
 function saveSettings() {
   const prevCurrency = settings.currency;
+  const prevDecimals = settings.decimals;
   settings.name = document.getElementById('set-name').value;
   settings.balance = parseFloat(document.getElementById('set-balance').value) || 0;
   settings.strategy = document.getElementById('set-strategy').value;
   settings.currency = document.getElementById('set-currency').value;
+  settings.decimals = parseInt(document.getElementById('set-decimals').value);
   localStorage.setItem('dosho_settings', JSON.stringify(settings));
   const a = accounts.find(x => x.id === activeAccountId);
   if(a) { a.balance = settings.balance; a.currency = settings.currency; a.strategy = settings.strategy; persistAccounts(); }
@@ -2093,7 +2108,7 @@ function saveSettings() {
   document.getElementById('lbl-f-pnl').textContent = 'กำไร/ขาดทุนสุทธิ (' + getCurrencySymbol() + ') *';
   updateSidebar();
   renderChecklist();
-  if (settings.currency !== prevCurrency) {
+  if (settings.currency !== prevCurrency || settings.decimals !== prevDecimals) {
     renderDashboard(); renderCalendar(); renderTradeTable(); renderReports();
   }
 }
@@ -2121,7 +2136,7 @@ function openDayModal(dateStr) {
   const losses = dayTrades.filter(t => t.pnl < 0).length;
   const wr = dayTrades.length ? (wins/dayTrades.length*100).toFixed(1) : 0;
   const pnlCls = dayPnl >= 0 ? 'var(--green)' : 'var(--red)';
-  const pnlStr = (dayPnl >= 0 ? '+' : '−') + Math.abs(dayPnl).toLocaleString('th-TH',{minimumFractionDigits:2,maximumFractionDigits:2}) + getCurrencySymbol();
+  const pnlStr = (dayPnl >= 0 ? '+' : '−') + Math.abs(dayPnl).toLocaleString('th-TH',{minimumFractionDigits:getPnlDecimals(),maximumFractionDigits:getPnlDecimals()}) + getCurrencySymbol();
 
   document.getElementById('day-title').textContent = niceDate;
   document.getElementById('day-body').innerHTML = `
@@ -2147,7 +2162,7 @@ function openDayModal(dateStr) {
         ${dayTrades.map(t => {
           const tm = new Date(t.openDt).toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'});
           const pc = t.pnl >= 0 ? 'pnl-p' : 'pnl-n';
-          const ps = (t.pnl>=0?'+':'-') + Math.abs(t.pnl).toLocaleString('th-TH',{minimumFractionDigits:2,maximumFractionDigits:2}) + getCurrencySymbol();
+          const ps = (t.pnl>=0?'+':'-') + Math.abs(t.pnl).toLocaleString('th-TH',{minimumFractionDigits:getPnlDecimals(),maximumFractionDigits:getPnlDecimals()}) + getCurrencySymbol();
           return `<tr>
             <td><span class="sym">${t.symbol}</span></td>
             <td><span class="ttype ${t.direction==='BUY'?'b':'s'}">${t.direction}</span></td>
@@ -2185,7 +2200,7 @@ function openSymbolModal(sym) {
   const netPnl = symTrades.reduce((s,t) => s+t.pnl, 0);
   const wr = (wins.length / symTrades.length * 100).toFixed(1);
   const pnlColor = netPnl >= 0 ? 'var(--green)' : 'var(--red)';
-  const pnlStr = (netPnl >= 0 ? '+' : '−') + Math.abs(netPnl).toLocaleString('th-TH',{minimumFractionDigits:2,maximumFractionDigits:2}) + getCurrencySymbol();
+  const pnlStr = (netPnl >= 0 ? '+' : '−') + Math.abs(netPnl).toLocaleString('th-TH',{minimumFractionDigits:getPnlDecimals(),maximumFractionDigits:getPnlDecimals()}) + getCurrencySymbol();
 
   document.getElementById('day-title').textContent = sym + ' — ประวัติการเทรด';
   document.getElementById('day-body').innerHTML = `
@@ -2211,7 +2226,7 @@ function openSymbolModal(sym) {
         ${symTrades.map(t => {
           const dateStr = t.openDt ? new Date(t.openDt).toLocaleString('th-TH',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}) : '—';
           const pc = t.pnl >= 0 ? 'pnl-p' : 'pnl-n';
-          const ps = (t.pnl>=0?'+':'-') + Math.abs(t.pnl).toLocaleString('th-TH',{minimumFractionDigits:2,maximumFractionDigits:2}) + getCurrencySymbol();
+          const ps = (t.pnl>=0?'+':'-') + Math.abs(t.pnl).toLocaleString('th-TH',{minimumFractionDigits:getPnlDecimals(),maximumFractionDigits:getPnlDecimals()}) + getCurrencySymbol();
           return `<tr>
             <td><span class="ttype ${t.direction==='BUY'?'b':'s'}">${t.direction}</span></td>
             <td>${dateStr}</td>
@@ -2235,7 +2250,7 @@ function openTradeDetail(id) {
   if(!t) return;
   const dateStr = t.openDt ? new Date(t.openDt).toLocaleString('th-TH',{weekday:'short',year:'numeric',month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}) : '—';
   const pnlCls = t.pnl >= 0 ? 'var(--green)' : 'var(--red)';
-  const pnlStr = (t.pnl >= 0 ? '+' : '−') + Math.abs(t.pnl).toLocaleString('th-TH',{minimumFractionDigits:2,maximumFractionDigits:2}) + getCurrencySymbol();
+  const pnlStr = (t.pnl >= 0 ? '+' : '−') + Math.abs(t.pnl).toLocaleString('th-TH',{minimumFractionDigits:getPnlDecimals(),maximumFractionDigits:getPnlDecimals()}) + getCurrencySymbol();
   document.getElementById('day-title').textContent = t.symbol + ' — รายละเอียดการเทรด';
   document.getElementById('day-body').innerHTML = `
     <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:14px">
@@ -2285,7 +2300,7 @@ function openWeekModal(wi, week, dayMap) {
   const losses = weekTrades.filter(t=>t.pnl<0).length;
   const wr = weekTrades.length ? (wins/weekTrades.length*100).toFixed(1) : 0;
   const pnlCls = wkPnl >= 0 ? 'var(--green)' : 'var(--red)';
-  const pnlStr = (wkPnl >= 0 ? '+' : '−') + Math.abs(wkPnl).toLocaleString('th-TH',{minimumFractionDigits:2,maximumFractionDigits:2}) + getCurrencySymbol();
+  const pnlStr = (wkPnl >= 0 ? '+' : '−') + Math.abs(wkPnl).toLocaleString('th-TH',{minimumFractionDigits:getPnlDecimals(),maximumFractionDigits:getPnlDecimals()}) + getCurrencySymbol();
   document.getElementById('day-title').textContent = `สัปดาห์ที่ ${wi+1} — สรุปผลประจำสัปดาห์`;
   document.getElementById('day-body').innerHTML = `
     <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px">
@@ -2310,7 +2325,7 @@ function openWeekModal(wi, week, dayMap) {
         ${weekTrades.map(t => {
           const ds = t.openDt ? new Date(t.openDt).toLocaleString('th-TH',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}) : '—';
           const pc = t.pnl >= 0 ? 'pnl-p' : 'pnl-n';
-          const ps = (t.pnl>=0?'+':'-') + Math.abs(t.pnl).toLocaleString('th-TH',{minimumFractionDigits:2,maximumFractionDigits:2}) + getCurrencySymbol();
+          const ps = (t.pnl>=0?'+':'-') + Math.abs(t.pnl).toLocaleString('th-TH',{minimumFractionDigits:getPnlDecimals(),maximumFractionDigits:getPnlDecimals()}) + getCurrencySymbol();
           return `<tr>
             <td><span class="sym">${t.symbol}</span></td>
             <td><span class="ttype ${t.direction==='BUY'?'b':'s'}">${t.direction}</span></td>

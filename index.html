@@ -100,7 +100,7 @@ body{font-family:'Mitr',-apple-system,sans-serif;background:var(--bg);color:var(
 .cal-nav-row{display:flex;align-items:center;gap:8px;padding:10px 14px;border-bottom:1px solid var(--border2);flex-shrink:0}
 .cal-arr{width:22px;height:22px;border-radius:5px;background:transparent;border:1px solid var(--border);color:var(--text2);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:13px;transition:background .12s}
 .cal-arr:hover{background:var(--surface2)}
-.cal-mon{font-size:13px;font-weight:600}
+.cal-mon{font-size:13px;font-weight:600;min-width:120px;text-align:center}
 .cal-chips{margin-left:auto;display:flex;gap:6px}
 .chip{font-size:11px;font-weight:600;padding:3px 8px;border-radius:10px}
 .chip-g{background:rgba(16,185,129,.15);color:var(--green)}
@@ -447,9 +447,6 @@ body{font-family:'Mitr',-apple-system,sans-serif;background:var(--bg);color:var(
 .sys-btn{width:24px;height:24px;border-radius:5px;border:1px solid var(--border);background:transparent;color:var(--text3);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:13px;font-family:inherit;transition:all .12s;line-height:1;padding:0}
 .sys-btn:hover{background:var(--surface2);color:var(--text)}
 .sys-btn.del:hover{background:var(--red-dim);color:var(--red);border-color:rgba(239,68,68,.3)}
-/* ─── CLICKABLE STAT ROWS ─── */
-.rpt-stat-row.clickable{cursor:pointer;transition:background .12s;border-radius:4px}
-.rpt-stat-row.clickable:hover{background:var(--surface2)}
 ::-webkit-scrollbar{width:5px;height:5px}
 ::-webkit-scrollbar-track{background:transparent}
 ::-webkit-scrollbar-thumb{background:var(--surface3);border-radius:3px}
@@ -561,7 +558,6 @@ body{font-family:'Mitr',-apple-system,sans-serif;background:var(--bg);color:var(
     <button class="hamburger" onclick="toggleSidebar()">☰</button>
     <div class="tb-title" id="tb-title">แดชบอร์ด</div>
     <div class="tb-spacer"></div>
-    <button id="theme-toggle-btn" onclick="toggleTheme()" title="สลับธีม" style="width:32px;height:32px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text2);cursor:pointer;display:flex;align-items:center;justify-content:center;margin-right:6px;font-size:16px;transition:background .15s,color .15s,border-color .15s;flex-shrink:0" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background='transparent'">🌙</button>
     <label class="btn btn-ghost" style="cursor:pointer;display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;padding:7px 13px;margin-right:6px" title="นำเข้า CSV จาก MT5">
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
       <span class="btn-label">Import MT5</span>
@@ -795,9 +791,9 @@ body{font-family:'Mitr',-apple-system,sans-serif;background:var(--bg);color:var(
           <div class="card-hd"><span class="card-title">สรุปผลงานการเทรด</span></div>
           <div class="card-bd">
             <div class="rpt-stat-row"><span class="rpt-stat-lbl">จำนวนครั้งที่เทรด</span><span class="rpt-stat-val" id="r-trades">—</span></div>
-            <div class="rpt-stat-row clickable" onclick="openFormulaModal('pnl')"><span class="rpt-stat-lbl">กำไร/ขาดทุนสุทธิ ⓘ</span><span class="rpt-stat-val" id="r-pnl">—</span></div>
-            <div class="rpt-stat-row clickable" onclick="openFormulaModal('wr')"><span class="rpt-stat-lbl">อัตราการชนะ (Win Rate) ⓘ</span><span class="rpt-stat-val" id="r-wr">—</span></div>
-            <div class="rpt-stat-row clickable" onclick="openFormulaModal('pf')"><span class="rpt-stat-lbl">ปัจจัยการทำกำไร (Profit Factor) ⓘ</span><span class="rpt-stat-val" id="r-pf">—</span></div>
+            <div class="rpt-stat-row"><span class="rpt-stat-lbl">กำไร/ขาดทุนสุทธิ</span><span class="rpt-stat-val" id="r-pnl">—</span></div>
+            <div class="rpt-stat-row"><span class="rpt-stat-lbl">อัตราการชนะ (Win Rate)</span><span class="rpt-stat-val" id="r-wr">—</span></div>
+            <div class="rpt-stat-row"><span class="rpt-stat-lbl">ปัจจัยการทำกำไร (Profit Factor)</span><span class="rpt-stat-val" id="r-pf">—</span></div>
             <div class="rpt-stat-row"><span class="rpt-stat-lbl">กำไรเฉลี่ยต่อไม้ที่ชนะ</span><span class="rpt-stat-val green" id="r-avgwin">—</span></div>
             <div class="rpt-stat-row"><span class="rpt-stat-lbl">ขาดทุนเฉลี่ยต่อไม้ที่แพ้</span><span class="rpt-stat-val red" id="r-avgloss">—</span></div>
             <div class="rpt-stat-row"><span class="rpt-stat-lbl">ไม้ที่ได้กำไรสูงสุด</span><span class="rpt-stat-val green" id="r-best">—</span></div>
@@ -1408,8 +1404,8 @@ function renderStatsSummary() {
   const s = calcStats(trades);
   const cur = getCurrencySymbol();
   const fmtV = v => v === null || v === undefined ? '—' : Math.abs(v).toFixed(getPnlDecimals()) + cur;
-  const row = (lbl, val, color, onclick) =>
-    `<div style="display:flex;align-items:center;justify-content:space-between;padding:7px 14px;border-bottom:1px solid var(--border2);${onclick?'cursor:pointer;':''}transition:background .12s" ${onclick?`onclick="${onclick}" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background=''"`:''}>
+  const row = (lbl, val, color) =>
+    `<div style="display:flex;align-items:center;justify-content:space-between;padding:7px 14px;border-bottom:1px solid var(--border2)">
       <span style="font-size:11px;color:var(--text2)">${lbl}</span>
       <span style="font-size:12px;font-weight:500;${color ? 'color:'+color : ''}">${val}</span>
     </div>`;
@@ -1420,10 +1416,10 @@ function renderStatsSummary() {
   const g = 'var(--green)', r = 'var(--red)';
   el.innerHTML = [
     row('จำนวนครั้งที่เทรด', trades.length + ' ครั้ง'),
-    row('กำไร/ขาดทุนสุทธิ ⓘ', (s.netPnl >= 0 ? '+' : '−') + Math.abs(s.netPnl).toFixed(getPnlDecimals()) + cur, s.netPnl >= 0 ? g : r, "openFormulaModal('pnl')"),
-    row('อัตราการชนะ (Win Rate) ⓘ', s.wr.toFixed(1) + '%', s.wr >= 50 ? g : r, "openFormulaModal('wr')"),
-    row('ปัจจัยการทำกำไร (Profit Factor) ⓘ', s.pf === Infinity ? '∞' : s.pf !== null ? s.pf.toFixed(2) : '—', s.pf >= 1 ? g : r, "openFormulaModal('pf')"),
-    row('Risk Reward เฉลี่ย ⓘ', s.avgLoss > 0 ? (s.avgWin/s.avgLoss).toFixed(2) : '—', s.avgLoss > 0 && s.avgWin/s.avgLoss >= 1 ? g : null, "openFormulaModal('rr')"),
+    row('กำไร/ขาดทุนสุทธิ', (s.netPnl >= 0 ? '+' : '−') + Math.abs(s.netPnl).toFixed(getPnlDecimals()) + cur, s.netPnl >= 0 ? g : r),
+    row('อัตราการชนะ (Win Rate)', s.wr.toFixed(1) + '%', s.wr >= 50 ? g : r),
+    row('ปัจจัยการทำกำไร (Profit Factor)', s.pf === Infinity ? '∞' : s.pf !== null ? s.pf.toFixed(2) : '—', s.pf >= 1 ? g : r),
+    row('Risk Reward เฉลี่ย', s.avgLoss > 0 ? (s.avgWin/s.avgLoss).toFixed(2) : '—', s.avgLoss > 0 && s.avgWin/s.avgLoss >= 1 ? g : null),
     row('กำไรเฉลี่ยต่อไม้ที่ชนะ', fmtV(s.avgWin), g),
     row('ขาดทุนเฉลี่ยต่อไม้ที่แพ้', fmtV(s.avgLoss), r),
     row('ไม้ที่ได้กำไรสูงสุด', (s.best >= 0 ? '+' : '') + s.best.toFixed(getPnlDecimals()) + cur, g),

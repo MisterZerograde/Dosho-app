@@ -1308,8 +1308,7 @@ function openFormulaModal(type) {
         <div class="formula-row"><span class="formula-lbl">กำไรรวม (Gross Win)</span><span class="formula-val" style="color:var(--green)">+${fmt(s.grossWin)}</span></div>
         <div class="formula-row"><span class="formula-lbl">ขาดทุนรวม (Gross Loss)</span><span class="formula-val" style="color:var(--red)">−${fmt(s.grossLoss)}</span></div>
         <div class="formula-row" style="background:var(--surface2);border-radius:6px;padding:8px 6px;margin-top:4px"><span class="formula-lbl" style="font-weight:600">กำไร/ขาดทุนสุทธิ</span><span class="formula-val" style="color:${s.netPnl>=0?'var(--green)':'var(--red)'};">${fmtN(s.netPnl)}</span></div>
-      </div>
-      <div class="formula-note">จากเทรดทั้งหมด ${trades.length} รายการ &nbsp;·&nbsp; ชนะ ${s.wins.length} &nbsp;·&nbsp; แพ้ ${s.losses.length}</div>`;
+      </div>`;
   } else if (type === 'pf') {
     const pfVal = s.pf === Infinity ? '∞' : s.pf !== null ? s.pf.toFixed(2) : '—';
     html = `
@@ -1318,8 +1317,7 @@ function openFormulaModal(type) {
         <div class="formula-row"><span class="formula-lbl">กำไรรวม (Gross Win)</span><span class="formula-val" style="color:var(--green)">+${fmt(s.grossWin)}</span></div>
         <div class="formula-row"><span class="formula-lbl">ขาดทุนรวม (Gross Loss)</span><span class="formula-val" style="color:var(--red)">−${fmt(s.grossLoss)}</span></div>
         <div class="formula-row" style="background:var(--surface2);border-radius:6px;padding:8px 6px;margin-top:4px"><span class="formula-lbl" style="font-weight:600">Profit Factor</span><span class="formula-val" style="color:${s.pf>=1?'var(--green)':'var(--red)'}">${pfVal}</span></div>
-      </div>
-      <div class="formula-note">PF > 1.5 = ดี &nbsp;·&nbsp; PF > 2 = ยอดเยี่ยม &nbsp;·&nbsp; PF = ∞ หมายถึงไม่มีเทรดที่ขาดทุนเลย</div>`;
+      </div>`;
   } else if (type === 'wr') {
     const pct = s.wr.toFixed(2);
     html = `
@@ -1329,8 +1327,7 @@ function openFormulaModal(type) {
         <div class="formula-row"><span class="formula-lbl">เทรดแพ้</span><span class="formula-val" style="color:var(--red)">${s.losses.length} รายการ</span></div>
         <div class="formula-row"><span class="formula-lbl">เทรดทั้งหมด</span><span class="formula-val">${trades.length} รายการ</span></div>
         <div class="formula-row" style="background:var(--surface2);border-radius:6px;padding:8px 6px;margin-top:4px"><span class="formula-lbl" style="font-weight:600">Win Rate</span><span class="formula-val" style="color:${s.wr>=50?'var(--green)':'var(--red)'}">${pct}%</span></div>
-      </div>
-      <div class="formula-note">Win Rate ≥ 50% ดี แต่ต้องดูคู่กับ Risk Reward เสมอ — WR 40% + RR 3:1 ยังทำกำไรได้</div>`;
+      </div>`;
   } else if (type === 'rr') {
     const rr = s.avgLoss > 0 ? (s.avgWin / s.avgLoss).toFixed(2) : null;
     html = `
@@ -1339,8 +1336,7 @@ function openFormulaModal(type) {
         <div class="formula-row"><span class="formula-lbl">กำไรเฉลี่ยต่อไม้ชนะ (Avg Win)</span><span class="formula-val" style="color:var(--green)">+${fmt(s.avgWin)}</span></div>
         <div class="formula-row"><span class="formula-lbl">ขาดทุนเฉลี่ยต่อไม้แพ้ (Avg Loss)</span><span class="formula-val" style="color:var(--red)">−${fmt(s.avgLoss)}</span></div>
         <div class="formula-row" style="background:var(--surface2);border-radius:6px;padding:8px 6px;margin-top:4px"><span class="formula-lbl" style="font-weight:600">Risk Reward เฉลี่ย</span><span class="formula-val">${rr !== null ? rr : '—'}</span></div>
-      </div>
-      <div class="formula-note">RR ≥ 1 หมายถึงกำไรเฉลี่ยมากกว่าขาดทุนเฉลี่ย &nbsp;·&nbsp; ใช้ร่วมกับ Win Rate เพื่อประเมิน Expectancy</div>`;
+      </div>`;
   }
 
   document.getElementById('day-body').innerHTML = `<div style="padding:4px 0">${html}</div>`;

@@ -802,8 +802,8 @@ body{font-family:'Mitr',-apple-system,sans-serif;background:var(--bg);color:var(
             <div class="rpt-stat-row"><span class="rpt-stat-lbl">ไม้ที่ขาดทุนสูงสุด</span><span class="rpt-stat-val red" id="r-worst">—</span></div>
             <div class="rpt-stat-row"><span class="rpt-stat-lbl">ชนะติดต่อกันสูงสุด</span><span class="rpt-stat-val" id="r-streak">—</span></div>
             <div class="rpt-stat-row"><span class="rpt-stat-lbl">แพ้ติดต่อกันสูงสุด</span><span class="rpt-stat-val" id="r-lstreak">—</span></div>
-            <div class="rpt-stat-row"><span class="rpt-stat-lbl">Sharpe Ratio</span><span class="rpt-stat-val" id="r-sharpe">—</span></div>
-            <div class="rpt-stat-row"><span class="rpt-stat-lbl">Recovery Factor</span><span class="rpt-stat-val" id="r-rf">—</span></div>
+            <div class="rpt-stat-row clickable" onclick="openFormulaModal('sharpe')"><span class="rpt-stat-lbl">Sharpe Ratio</span><span class="rpt-stat-val" id="r-sharpe">—</span></div>
+            <div class="rpt-stat-row clickable" onclick="openFormulaModal('rf')"><span class="rpt-stat-lbl">Recovery Factor</span><span class="rpt-stat-val" id="r-rf">—</span></div>
           </div>
         </div>
         <div class="card">
@@ -1428,8 +1428,8 @@ function renderStatsSummary() {
     row('ไม้ที่ขาดทุนสูงสุด', s.worst.toFixed(getPnlDecimals()) + cur, r),
     row('ชนะติดต่อกันสูงสุด', s.maxW + ' รายการ', g),
     row('แพ้ติดต่อกันสูงสุด', s.maxL + ' รายการ', r),
-    row('Sharpe Ratio', s.sharpe !== null ? s.sharpe : '—', s.sharpe > 0 ? g : null),
-    row('Recovery Factor', s.rf !== null ? s.rf : '—', s.rf > 1 ? g : null),
+    row('Sharpe Ratio', s.sharpe !== null ? s.sharpe : '—', s.sharpe > 0 ? g : null, "openFormulaModal('sharpe')"),
+    row('Recovery Factor', s.rf !== null ? s.rf : '—', s.rf > 1 ? g : null, "openFormulaModal('rf')"),
   ].join('');
 }
 
@@ -1440,7 +1440,7 @@ function openFormulaModal(type) {
   const fmt = v => v !== null && v !== undefined ? Math.abs(v).toFixed(getPnlDecimals()) + cur : '—';
   const fmtN = v => v !== null && v !== undefined ? (v >= 0 ? '+' : '−') + Math.abs(v).toFixed(getPnlDecimals()) + cur : '—';
 
-  const titles = { pnl:'กำไร/ขาดทุนสุทธิ', pf:'ปัจจัยการทำกำไร (Profit Factor)', wr:'อัตราการชนะ (Win Rate)', rr:'Risk Reward เฉลี่ย' };
+  const titles = { pnl:'กำไร/ขาดทุนสุทธิ', pf:'ปัจจัยการทำกำไร (Profit Factor)', wr:'อัตราการชนะ (Win Rate)', rr:'Risk Reward เฉลี่ย', sharpe:'Sharpe Ratio', rf:'Recovery Factor' };
   document.getElementById('day-title').textContent = titles[type] || 'สูตรคำนวณ';
 
   let html = '';
@@ -1481,6 +1481,27 @@ function openFormulaModal(type) {
         <div class="formula-row"><span class="formula-lbl">กำไรเฉลี่ยต่อไม้ชนะ (Avg Win)</span><span class="formula-val" style="color:var(--green)">+${fmt(s.avgWin)}</span></div>
         <div class="formula-row"><span class="formula-lbl">ขาดทุนเฉลี่ยต่อไม้แพ้ (Avg Loss)</span><span class="formula-val" style="color:var(--red)">−${fmt(s.avgLoss)}</span></div>
         <div class="formula-row" style="background:var(--surface2);border-radius:6px;padding:8px 6px;margin-top:4px"><span class="formula-lbl" style="font-weight:600">Risk Reward เฉลี่ย</span><span class="formula-val">${rr !== null ? rr : '—'}</span></div>
+      </div>`;
+  } else if (type === 'sharpe') {
+    const pnls = trades.map(t => t.pnl);
+    const mean = s.netPnl / trades.length;
+    const std = Math.sqrt(pnls.reduce((a,v) => a + (v-mean)**2, 0) / trades.length);
+    html = `
+      <div class="formula-eq">กำไรเฉลี่ยต่อไม้ ÷ ส่วนเบี่ยงเบนมาตรฐาน</div>
+      <div style="margin-top:12px">
+        <div class="formula-row"><span class="formula-lbl">กำไรเฉลี่ยต่อไม้ (Mean P&L)</span><span class="formula-val">${mean >= 0 ? '+' : '−'}${Math.abs(mean).toFixed(getPnlDecimals())}${cur}</span></div>
+        <div class="formula-row"><span class="formula-lbl">ส่วนเบี่ยงเบนมาตรฐาน (Std Dev)</span><span class="formula-val">${std.toFixed(getPnlDecimals())}${cur}</span></div>
+        <div class="formula-row" style="background:var(--surface2);border-radius:6px;padding:8px 6px;margin-top:4px"><span class="formula-lbl" style="font-weight:600">Sharpe Ratio</span><span class="formula-val" style="color:${s.sharpe > 0 ? 'var(--green)' : 'var(--red)'}">${s.sharpe !== null ? s.sharpe : '—'}</span></div>
+      </div>`;
+  } else if (type === 'rf') {
+    let peak = 0, cum = 0, maxDD = 0;
+    trades.forEach(t => { cum += t.pnl; if(cum > peak) peak = cum; const dd = peak - cum; if(dd > maxDD) maxDD = dd; });
+    html = `
+      <div class="formula-eq">กำไร/ขาดทุนสุทธิ ÷ Max Drawdown</div>
+      <div style="margin-top:12px">
+        <div class="formula-row"><span class="formula-lbl">กำไร/ขาดทุนสุทธิ</span><span class="formula-val" style="color:${s.netPnl>=0?'var(--green)':'var(--red)'}">${fmtN(s.netPnl)}</span></div>
+        <div class="formula-row"><span class="formula-lbl">Max Drawdown (ถอนย่อสูงสุด)</span><span class="formula-val" style="color:var(--red)">−${fmt(maxDD)}</span></div>
+        <div class="formula-row" style="background:var(--surface2);border-radius:6px;padding:8px 6px;margin-top:4px"><span class="formula-lbl" style="font-weight:600">Recovery Factor</span><span class="formula-val" style="color:${s.rf > 1 ? 'var(--green)' : 'var(--red)'}">${s.rf !== null ? s.rf : '—'}</span></div>
       </div>`;
   }
 

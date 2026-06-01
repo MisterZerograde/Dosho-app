@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Dosho — บันทึกการเทรด</title>
-<script>(function(){if(localStorage.getItem('dosho_dark')==='true')document.documentElement.dataset.theme='dark';})()</script>
+<script>(function(){var m=localStorage.getItem('dosho_theme')||'system';if(m==='dark'||(m==='system'&&window.matchMedia('(prefers-color-scheme:dark)').matches))document.documentElement.dataset.theme='dark';})()</script>
 <link href="https://fonts.googleapis.com/css2?family=Mitr:wght@200;300;400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <style>
@@ -454,6 +454,13 @@ body{font-family:'Mitr',-apple-system,sans-serif;background:var(--bg);color:var(
 ::-webkit-scrollbar-track{background:transparent}
 ::-webkit-scrollbar-thumb{background:var(--surface3);border-radius:3px}
 
+/* ─── THEME CARDS ─── */
+.tc{display:flex;flex-direction:column;align-items:center;gap:7px;cursor:pointer;flex:1}
+.tc-box{width:100%;border-radius:10px;border:2px solid var(--border);padding:10px;transition:border-color .15s,box-shadow .15s;aspect-ratio:4/3;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.tc.active .tc-box{border-color:var(--text);box-shadow:0 0 0 1px var(--text)}
+.tc-lbl{font-size:12px;color:var(--text2);font-weight:500;transition:color .15s}
+.tc.active .tc-lbl{color:var(--text);font-weight:600}
+
 /* ─── RESPONSIVE ─── */
 .sb-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:190;display:none;backdrop-filter:blur(2px)}
 .sb-backdrop.show{display:block}
@@ -820,12 +827,28 @@ body{font-family:'Mitr',-apple-system,sans-serif;background:var(--bg);color:var(
           <div class="card-bd">
             <div class="form-group" style="margin-bottom:14px">
               <label class="form-label">ธีม</label>
-              <div style="display:flex;align-items:center;gap:10px;padding:6px 0">
-                <span style="font-size:12px;color:var(--text2)">☀️ สว่าง</span>
-                <div id="theme-sw" onclick="toggleTheme()" style="width:40px;height:22px;border-radius:11px;cursor:pointer;position:relative;transition:background .2s;background:rgba(40,44,103,0.15)">
-                  <div style="width:18px;height:18px;border-radius:50%;background:#fff;position:absolute;top:2px;left:2px;transition:transform .2s;box-shadow:0 1px 3px rgba(0,0,0,.3)"></div>
+              <div style="display:flex;gap:8px;padding:6px 0">
+                <div class="tc" id="tc-light" onclick="setTheme('light')">
+                  <div class="tc-box" style="background:#e8edf2">
+                    <div style="background:#fff;border-radius:5px;width:58%;padding:7px 8px;box-shadow:0 1px 5px rgba(0,0,0,.13);font-size:14px;font-weight:700;color:#1e293b">Aa</div>
+                  </div>
+                  <span class="tc-lbl">สว่าง</span>
                 </div>
-                <span style="font-size:12px;color:var(--text2)">🌙 มืด</span>
+                <div class="tc" id="tc-dark" onclick="setTheme('dark')">
+                  <div class="tc-box" style="background:#1a1d2e">
+                    <div style="background:#0f1117;border-radius:5px;width:58%;padding:7px 8px;box-shadow:0 1px 5px rgba(0,0,0,.5);font-size:14px;font-weight:700;color:#f1f5f9">Aa</div>
+                  </div>
+                  <span class="tc-lbl">มืด</span>
+                </div>
+                <div class="tc" id="tc-system" onclick="setTheme('system')">
+                  <div class="tc-box" style="background:linear-gradient(to right,#1a1d2e 50%,#e8edf2 50%)">
+                    <div style="display:flex;border-radius:5px;overflow:hidden;width:58%">
+                      <div style="flex:1;background:#0f1117;padding:7px 5px;font-size:12px;font-weight:700;color:#f1f5f9;text-align:center">Aa</div>
+                      <div style="flex:1;background:#fff;padding:7px 5px;font-size:12px;font-weight:700;color:#1e293b;text-align:center">Aa</div>
+                    </div>
+                  </div>
+                  <span class="tc-lbl">ระบบ</span>
+                </div>
               </div>
             </div>
             <div class="form-group" style="margin-bottom:14px">
@@ -1038,19 +1061,25 @@ let calYear, calMonth;
 let calShowWeekend = JSON.parse(localStorage.getItem('dosho_cal_weekend') ?? 'true');
 let activeJournalDate = new Date().toISOString().slice(0,10);
 let rptChartInst = null;
-let darkMode = localStorage.getItem('dosho_dark') === 'true';
+let themeMode = localStorage.getItem('dosho_theme') || 'system';
+window.matchMedia('(prefers-color-scheme:dark)').addEventListener('change', () => { if(themeMode==='system') applyTheme(); });
 
 /* ═══ THEME ═══ */
 function applyTheme() {
-  document.documentElement.dataset.theme = darkMode ? 'dark' : '';
+  const dark = themeMode==='dark' || (themeMode==='system' && window.matchMedia('(prefers-color-scheme:dark)').matches);
+  document.documentElement.dataset.theme = dark ? 'dark' : '';
   const btn = document.getElementById('theme-toggle-btn');
-  if(btn) btn.textContent = darkMode ? '☀️' : '🌙';
-  const sw = document.getElementById('theme-sw');
-  if(sw) {
-    sw.style.background = darkMode ? '#6366f1' : 'rgba(40,44,103,0.15)';
-    const knob = sw.querySelector('div');
-    if(knob) knob.style.transform = darkMode ? 'translateX(18px)' : 'translateX(0)';
-  }
+  if(btn) btn.textContent = themeMode==='dark' ? '🌙' : themeMode==='light' ? '☀️' : '💻';
+  ['light','dark','system'].forEach(m => {
+    const el = document.getElementById('tc-'+m);
+    if(el) el.classList.toggle('active', m===themeMode);
+  });
+}
+function setTheme(mode) {
+  themeMode = mode;
+  localStorage.setItem('dosho_theme', mode);
+  applyTheme();
+  if(rptChartInst) renderReports();
 }
 function toggleSidebar() {
   document.querySelector('.sidebar').classList.toggle('sb-open');
@@ -1063,10 +1092,8 @@ function closeSidebar() {
   document.body.classList.remove('sb-open');
 }
 function toggleTheme() {
-  darkMode = !darkMode;
-  localStorage.setItem('dosho_dark', darkMode);
-  applyTheme();
-  if(rptChartInst) renderReports();
+  const modes = ['light','dark','system'];
+  setTheme(modes[(modes.indexOf(themeMode)+1)%3]);
 }
 
 /* ═══ HELPERS ═══ */

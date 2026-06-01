@@ -589,12 +589,16 @@ body{font-family:'Mitr',-apple-system,sans-serif;background:var(--bg);color:var(
             </div>
           </div>
 
-          <!-- Recent Trades -->
-          <div class="card" style="display:flex;flex-direction:column;min-height:0">
-            <div class="card-hd">
-              <span class="card-title">เทรดล่าสุด</span>
+          <!-- Right column: recent trades + stats summary -->
+          <div style="display:flex;flex-direction:column;gap:14px;min-height:0;overflow:hidden">
+            <div class="card" style="display:flex;flex-direction:column;flex:1;min-height:0">
+              <div class="card-hd"><span class="card-title">เทรดล่าสุด</span></div>
+              <div id="recent-trades-list" style="flex:1;overflow-y:auto"></div>
             </div>
-            <div id="recent-trades-list" style="flex:1;overflow-y:auto"></div>
+            <div class="card" style="display:flex;flex-direction:column;flex:1;min-height:0">
+              <div class="card-hd"><span class="card-title">สรุปผลงานการเทรด</span></div>
+              <div id="stats-summary" style="flex:1;overflow-y:auto"></div>
+            </div>
           </div>
 
         </div>
@@ -1200,6 +1204,7 @@ function renderDashboard() {
   }
 
   renderRecentTrades();
+  renderStatsSummary();
 }
 
 /* ═══ RECENT TRADES MINI ═══ */
@@ -1222,6 +1227,39 @@ function renderRecentTrades() {
       <span class="rtrade-pnl" style="color:${pnlColor}">${pnlStr}</span>
     </div>`;
   }).join('');
+}
+
+/* ═══ STATS SUMMARY ═══ */
+function renderStatsSummary() {
+  const el = document.getElementById('stats-summary');
+  if (!el) return;
+  const s = calcStats(trades);
+  const cur = getCurrencySymbol();
+  const fmtV = v => v === null || v === undefined ? '—' : Math.abs(v).toFixed(2) + cur;
+  const row = (lbl, val, color) =>
+    `<div style="display:flex;align-items:center;justify-content:space-between;padding:7px 14px;border-bottom:1px solid var(--border2)">
+      <span style="font-size:11px;color:var(--text2)">${lbl}</span>
+      <span style="font-size:12px;font-weight:500;${color ? 'color:'+color : ''}">${val}</span>
+    </div>`;
+  if (!s) {
+    el.innerHTML = '<div style="text-align:center;padding:24px;color:var(--text3);font-size:12px">ยังไม่มีข้อมูล</div>';
+    return;
+  }
+  const g = 'var(--green)', r = 'var(--red)';
+  el.innerHTML = [
+    row('จำนวนครั้งที่เทรด', trades.length + ' ครั้ง'),
+    row('กำไร/ขาดทุนสุทธิ', (s.netPnl >= 0 ? '+' : '−') + Math.abs(s.netPnl).toFixed(2) + cur, s.netPnl >= 0 ? g : r),
+    row('อัตราการชนะ (Win Rate)', s.wr.toFixed(1) + '%', s.wr >= 50 ? g : r),
+    row('ปัจจัยการทำกำไร (Profit Factor)', s.pf === Infinity ? '∞' : s.pf !== null ? s.pf.toFixed(2) : '—', s.pf >= 1 ? g : r),
+    row('กำไรเฉลี่ยต่อไม้ที่ชนะ', fmtV(s.avgWin), g),
+    row('ขาดทุนเฉลี่ยต่อไม้ที่แพ้', fmtV(s.avgLoss), r),
+    row('ไม้ที่ได้กำไรสูงสุด', (s.best >= 0 ? '+' : '') + s.best.toFixed(2) + cur, g),
+    row('ไม้ที่ขาดทุนสูงสุด', s.worst.toFixed(2) + cur, r),
+    row('ชนะติดต่อกันสูงสุด', s.maxW + ' รายการ', g),
+    row('แพ้ติดต่อกันสูงสุด', s.maxL + ' รายการ', r),
+    row('Sharpe Ratio', s.sharpe !== null ? s.sharpe : '—', s.sharpe > 0 ? g : null),
+    row('Recovery Factor', s.rf !== null ? s.rf : '—', s.rf > 1 ? g : null),
+  ].join('');
 }
 
 /* ═══ SIDEBAR BALANCE ═══ */

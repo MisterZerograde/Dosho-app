@@ -433,8 +433,6 @@ body{font-family:'Mitr',-apple-system,sans-serif;background:var(--bg);color:var(
 .mt16{margin-top:16px}
 .green{color:var(--green)}
 .red{color:var(--red)}
-.info-i{width:14px;height:14px;border-radius:50%;background:var(--surface3);color:var(--text3);display:inline-flex;align-items:center;justify-content:center;font-size:9px;cursor:help;font-style:italic;font-weight:500}
-#global-tip{position:fixed;background:#1e2240;border:1px solid rgba(62,69,184,0.2);padding:9px 11px;border-radius:7px;font-size:11px;color:#e2e8f0;line-height:1.5;width:240px;z-index:9999;pointer-events:none;box-shadow:0 6px 18px rgba(30,34,64,.25);display:none}
 /* ─── FORMULA MODAL ─── */
 .formula-eq{font-size:13px;font-weight:600;color:var(--purple2);padding:8px 12px;background:var(--surface2);border-radius:7px;margin:10px 0 6px;text-align:center}
 .formula-row{display:flex;align-items:flex-start;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border2);gap:10px}
@@ -555,7 +553,6 @@ body{font-family:'Mitr',-apple-system,sans-serif;background:var(--bg);color:var(
   <header class="topbar">
     <button class="hamburger" onclick="toggleSidebar()">☰</button>
     <div class="tb-title" id="tb-title">แดชบอร์ด</div>
-    <span class="info-i" style="margin-left:2px" data-tip="KPI รายเดือน, ปฏิทินกำไร/ขาดทุน และกราฟ Equity Curve สะสม">i</span>
     <div class="tb-spacer"></div>
     <button id="theme-toggle-btn" onclick="toggleTheme()" title="สลับธีม" style="width:32px;height:32px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text2);cursor:pointer;display:flex;align-items:center;justify-content:center;margin-right:6px;font-size:16px;transition:background .15s,color .15s,border-color .15s;flex-shrink:0" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background='transparent'">🌙</button>
     <label class="btn btn-ghost" style="cursor:pointer;display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;padding:7px 13px;margin-right:6px" title="นำเข้า CSV จาก MT5">
@@ -580,7 +577,7 @@ body{font-family:'Mitr',-apple-system,sans-serif;background:var(--bg);color:var(
           <div class="kpi-card" onclick="openFormulaModal('pnl')" title="คลิกเพื่อดูสูตรคำนวณ">
             <div class="kpi-inner">
               <div style="flex:1">
-                <div class="kpi-lbl" style="display:flex;align-items:center;gap:4px">กำไร/ขาดทุนสุทธิ <span class="info-i" data-tip="กำไร − ขาดทุน − ค่าคอมมิชชัน − สวอป จากออเดอร์ที่ปิดแล้วในช่วงที่เลือก">i</span></div>
+                <div class="kpi-lbl">กำไร/ขาดทุนสุทธิ</div>
                 <div class="kpi-val g" id="kpi-pnl" style="margin-top:4px">$0.00</div>
                 <div class="kpi-sub" id="kpi-pnl-sub" style="margin-top:3px">ทั้งหมด 0 รายการ</div>
               </div>
@@ -595,7 +592,7 @@ body{font-family:'Mitr',-apple-system,sans-serif;background:var(--bg);color:var(
           <div class="kpi-card" onclick="openFormulaModal('pf')" title="คลิกเพื่อดูสูตรคำนวณ">
             <div class="kpi-inner">
               <div style="flex:1">
-                <div class="kpi-lbl" style="display:flex;align-items:center;gap:4px">ปัจจัยการทำกำไร (Profit Factor) <span class="info-i" data-tip="กำไรรวม ÷ ขาดทุนรวม">i</span></div>
+                <div class="kpi-lbl">ปัจจัยการทำกำไร (Profit Factor)</div>
                 <div class="kpi-val" id="kpi-pf" style="margin-top:4px">—</div>
                 <div class="kpi-sub" style="margin-top:3px">กำไรรวม / ขาดทุนรวม</div>
               </div>
@@ -608,7 +605,7 @@ body{font-family:'Mitr',-apple-system,sans-serif;background:var(--bg);color:var(
           </div>
           <!-- Win Rate -->
           <div class="kpi-card" onclick="openFormulaModal('wr')" title="คลิกเพื่อดูสูตรคำนวณ">
-            <div style="display:flex;align-items:center;gap:4px;margin-bottom:4px" class="kpi-lbl">อัตราการชนะ (Win Rate) <span class="info-i" data-tip="จำนวนเทรดที่ชนะ ÷ จำนวนเทรดทั้งหมด × 100">i</span></div>
+            <div class="kpi-lbl" style="margin-bottom:4px">อัตราการชนะ (Win Rate)</div>
             <div class="kpi-inner">
               <div>
                 <div class="kpi-val" id="kpi-wr">—</div>
@@ -628,7 +625,7 @@ body{font-family:'Mitr',-apple-system,sans-serif;background:var(--bg);color:var(
           </div>
           <!-- Avg Win/Loss -->
           <div class="kpi-card" onclick="openFormulaModal('rr')" title="คลิกเพื่อดูสูตรคำนวณ">
-            <div class="kpi-lbl" style="display:flex;align-items:center;gap:4px;margin-bottom:4px">Risk reward เฉลี่ย <span class="info-i" data-tip="กำไรเฉลี่ยต่อเทรด ÷ ขาดทุนเฉลี่ยต่อเทรด">i</span></div>
+            <div class="kpi-lbl" style="margin-bottom:4px">Risk reward เฉลี่ย</div>
             <div class="kpi-val" id="kpi-rr">—</div>
             <div class="kpi-rr-flank">
               <span class="kpi-rr-win-lbl" id="kpi-rr-win">—</span>
@@ -2591,34 +2588,6 @@ function renderAccountsList() {
     </div>`;
   }).join('')+'<div style="font-size:11px;color:var(--text3);padding-top:10px">แต่ละบัญชีมีรายการเทรด บันทึกประจำวัน และเช็กลิสต์แยกอิสระจากกัน</div>';
 }
-
-/* ═══ TOOLTIP ═══ */
-(function setupTooltip() {
-  const tip = document.createElement('div');
-  tip.id = 'global-tip';
-  document.body.appendChild(tip);
-
-  document.addEventListener('mouseover', (e) => {
-    const el = e.target.closest('[data-tip]');
-    if(!el) return;
-    tip.textContent = el.getAttribute('data-tip');
-    tip.style.display = 'block';
-    const r = el.getBoundingClientRect();
-    const tw = tip.offsetWidth, th = tip.offsetHeight;
-    let top = r.top - th - 10;
-    let left = r.left + r.width/2 - tw/2;
-    if(top < 8) top = r.bottom + 10;
-    if(left < 8) left = 8;
-    if(left + tw > window.innerWidth - 8) left = window.innerWidth - tw - 8;
-    tip.style.top = top + 'px';
-    tip.style.left = left + 'px';
-  });
-  document.addEventListener('mouseout', (e) => {
-    const el = e.target.closest('[data-tip]');
-    if(!el) return;
-    tip.style.display = 'none';
-  });
-})();
 
 /* ═══ CSV / HTML IMPORT ═══ */
 function handleCSVImport(e) {

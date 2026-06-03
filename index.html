@@ -2842,14 +2842,43 @@ function renderAccountsList() {
 }
 
 /* ═══ CSV / HTML IMPORT ═══ */
+function _showImportModeModal() {
+  return new Promise(resolve => {
+    const ov = document.createElement('div');
+    ov.id = '_import-mode-modal';
+    ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9998;display:flex;align-items:center;justify-content:center;padding:16px';
+    ov.innerHTML = `
+      <div style="background:var(--surface);border-radius:16px;padding:28px 28px 24px;max-width:400px;width:100%;box-shadow:0 24px 64px rgba(0,0,0,.4)">
+        <div style="font-size:17px;font-weight:700;color:var(--text1);margin-bottom:8px">นำเข้าข้อมูล</div>
+        <div style="font-size:13px;color:var(--text3);margin-bottom:22px">ต้องการจัดการข้อมูลเทรดที่มีอยู่อย่างไร?</div>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <button id="_imp-add" style="padding:12px 16px;border-radius:10px;border:1.5px solid var(--purple);background:var(--purple);color:#fff;font-size:14px;font-weight:600;cursor:pointer;text-align:left">
+            <div style="font-weight:700">เพิ่มต่อ (Add)</div>
+            <div style="font-size:11px;opacity:.8;margin-top:2px">เพิ่มรายการใหม่ ข้ามรายการที่มีอยู่แล้ว</div>
+          </button>
+          <button id="_imp-replace" style="padding:12px 16px;border-radius:10px;border:1.5px solid #dc2626;background:#dc262615;color:#dc2626;font-size:14px;font-weight:600;cursor:pointer;text-align:left">
+            <div style="font-weight:700">แทนที่ทั้งหมด (Replace)</div>
+            <div style="font-size:11px;opacity:.8;margin-top:2px">ลบประวัติเทรดทั้งหมด แล้วใช้ข้อมูลใหม่แทน</div>
+          </button>
+          <button id="_imp-cancel" style="padding:10px 16px;border-radius:10px;border:1.5px solid var(--border2);background:transparent;color:var(--text3);font-size:13px;font-weight:600;cursor:pointer">ยกเลิก</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(ov);
+    document.getElementById('_imp-add').onclick = () => { ov.remove(); resolve('add'); };
+    document.getElementById('_imp-replace').onclick = () => { ov.remove(); resolve('replace'); };
+    document.getElementById('_imp-cancel').onclick = () => { ov.remove(); resolve(null); };
+    ov.addEventListener('click', e => { if (e.target === ov) { ov.remove(); resolve(null); } });
+  });
+}
+
 function handleCSVImport(e) {
   const file = e.target.files[0];
   if(!file) return;
   const reader = new FileReader();
-  reader.onload = (ev) => {
+  reader.onload = async (ev) => {
     const ab = ev.target.result;
     const bytes = new Uint8Array(ab);
-    // MT5 HTML reports are UTF-16 LE (BOM: FF FE)
     let text;
     if(bytes[0] === 0xFF && bytes[1] === 0xFE) {
       text = new TextDecoder('utf-16le').decode(ab);
@@ -2863,18 +2892,27 @@ function handleCSVImport(e) {
       e.target.value = '';
       return;
     }
+    const mode = await _showImportModeModal();
+    if (!mode) { e.target.value = ''; return; }
     let added = 0;
-    imported.forEach(t => {
-      const dup = trades.some(x => x.openDt === t.openDt && x.symbol === t.symbol && Math.abs(x.pnl - t.pnl) < 0.01);
-      if(!dup) { trades.push({ ...t, source: 'import' }); added++; }
-    });
+    if (mode === 'replace') {
+      trades.length = 0;
+      imported.forEach(t => { trades.push({ ...t, source: 'import' }); added++; });
+    } else {
+      imported.forEach(t => {
+        const dup = trades.some(x => x.openDt === t.openDt && x.symbol === t.symbol && Math.abs(x.pnl - t.pnl) < 0.01);
+        if(!dup) { trades.push({ ...t, source: 'import' }); added++; }
+      });
+    }
     trades.sort((a,b) => getTradeTimeMs(a.openDt) - getTradeTimeMs(b.openDt));
     persist();
     renderDashboard(); renderCalendar(); renderTradeTable(); renderReports();
     const status = document.getElementById('import-status');
     if(status) {
       status.style.display = 'block';
-      status.textContent = `✓ นำเข้าสำเร็จ! เพิ่ม ${added} รายการใหม่ (ข้าม ${imported.length - added} รายการที่มีอยู่แล้ว)`;
+      status.textContent = mode === 'replace'
+        ? `✓ แทนที่สำเร็จ! นำเข้า ${added} รายการ`
+        : `✓ นำเข้าสำเร็จ! เพิ่ม ${added} รายการใหม่ (ข้าม ${imported.length - added} รายการที่มีอยู่แล้ว)`;
       setTimeout(() => { status.style.display = 'none'; }, 5000);
     }
     e.target.value = '';
@@ -2992,19 +3030,28 @@ async function syncMT5() {
     }
     const data = await res.json();
     const imported = data.trades || [];
+    const mode = await _showImportModeModal();
+    if (!mode) return;
     let added = 0;
-    imported.forEach(t => {
-      const dup = trades.some(x => x.openDt === t.openDt && x.symbol === t.symbol && Math.abs(x.pnl - t.pnl) < 0.01);
-      if (!dup) { trades.push({ ...t, source: 'sync' }); added++; }
-    });
+    if (mode === 'replace') {
+      trades.length = 0;
+      imported.forEach(t => { trades.push({ ...t, source: 'sync' }); added++; });
+    } else {
+      imported.forEach(t => {
+        const dup = trades.some(x => x.openDt === t.openDt && x.symbol === t.symbol && Math.abs(x.pnl - t.pnl) < 0.01);
+        if (!dup) { trades.push({ ...t, source: 'sync' }); added++; }
+      });
+    }
     trades.sort((a, b) => getTradeTimeMs(a.openDt) - getTradeTimeMs(b.openDt));
     persist();
     renderDashboard(); renderCalendar(); renderTradeTable(); renderReports();
     await checkMT5Bridge();
     _showSyncToast(
-      added > 0
-        ? `✓ เพิ่ม ${added} รายการใหม่  (ข้าม ${imported.length - added} ซ้ำ)`
-        : `✓ ข้อมูลอัปเดตแล้ว  ไม่มีรายการใหม่`,
+      mode === 'replace'
+        ? `✓ แทนที่สำเร็จ! นำเข้า ${added} รายการ`
+        : added > 0
+          ? `✓ เพิ่ม ${added} รายการใหม่  (ข้าม ${imported.length - added} ซ้ำ)`
+          : `✓ ข้อมูลอัปเดตแล้ว  ไม่มีรายการใหม่`,
       false
     );
   } catch (e) {

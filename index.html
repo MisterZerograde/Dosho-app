@@ -971,7 +971,10 @@ body{font-family:'Mitr',-apple-system,sans-serif;background:var(--bg);color:var(
               </select>
             </div>
             <div class="form-group" style="margin-bottom:14px">
-              <label class="form-label">Auto sync</label>
+              <label class="form-label" style="display:flex;align-items:center;justify-content:space-between">
+                <span>Auto sync</span>
+                <span id="bridge-countdown" style="font-size:11px;color:var(--purple);font-weight:500;display:none"></span>
+              </label>
               <select id="bridge-interval" class="form-input" onchange="setBridgeInterval(+this.value)" disabled>
                 <option value="0" selected>ปิด</option>
                 <option value="60">1 นาที</option>
@@ -3001,6 +3004,21 @@ function handleCSVImport(e) {
 
 /* ── MT5 Bridge ── */
 const _MT5_DOWNLOAD_URL = 'https://github.com/MisterZerograde/Dosho-app/releases/download/latest/mt5_bridge.exe';
+let _bridgeNextSyncAt = null;
+let _bridgeIntervalSecs = 0;
+let _bridgeLastSyncTime = null;
+(function _countdownTick() {
+  const el = document.getElementById('bridge-countdown');
+  if (el && _bridgeNextSyncAt && _bridgeIntervalSecs > 0) {
+    const secs = Math.max(0, Math.round((_bridgeNextSyncAt - Date.now()) / 1000));
+    const m = Math.floor(secs / 60), s = secs % 60;
+    el.textContent = `ซิงค์ใน ${m}:${String(s).padStart(2,'0')}`;
+    el.style.display = '';
+  } else if (el) {
+    el.style.display = 'none';
+  }
+  setTimeout(_countdownTick, 1000);
+}());
 
 function _updateDot(state, title) {
   const dot = document.getElementById('mt5-dot');
@@ -3032,10 +3050,26 @@ function _updateBridgeSettings(d) {
     if (perEl) perEl.value = d.config?.period_days   ?? 30;
     if (intEl) intEl.value = d.config?.interval_secs ?? 0;
     if (stEl)  stEl.checked = !!d.startup;
+    const interval = d.config?.interval_secs ?? 0;
+    _bridgeIntervalSecs = interval;
+    if (interval > 0) {
+      const syncTime = d.lastSync?.time;
+      if (syncTime && syncTime !== _bridgeLastSyncTime) {
+        _bridgeLastSyncTime = syncTime;
+        _bridgeNextSyncAt = Date.now() + interval * 1000;
+      } else if (!_bridgeNextSyncAt) {
+        _bridgeNextSyncAt = Date.now() + interval * 1000;
+      }
+    } else {
+      _bridgeNextSyncAt = null;
+      _bridgeLastSyncTime = null;
+    }
   } else {
     info.textContent = 'Bridge ออฟไลน์ — ดาวน์โหลดและเปิด mt5_bridge.exe';
     if (dlRow) dlRow.style.display = 'block';
     [perEl, intEl, stEl].forEach(el => { if (el) el.disabled = true; });
+    _bridgeNextSyncAt = null;
+    _bridgeIntervalSecs = 0;
   }
 }
 

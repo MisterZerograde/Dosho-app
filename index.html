@@ -936,6 +936,54 @@ body{font-family:'Mitr',-apple-system,sans-serif;background:var(--bg);color:var(
             <button class="btn btn-red" onclick="clearAllData()" style="margin-top:18px;width:100%">ล้างข้อมูลทั้งหมด</button>
           </div>
         </div>
+        <div class="card" style="margin-top:14px">
+          <div class="card-hd"><span class="card-title">MT5 Bridge</span></div>
+          <div class="card-bd">
+            <div id="bridge-status-row" style="display:flex;align-items:center;gap:8px;margin-bottom:14px;padding:10px 14px;border-radius:10px;background:var(--bg2);font-size:13px">
+              <span id="bridge-set-dot" style="width:8px;height:8px;border-radius:50%;background:#6b7280;flex-shrink:0;transition:background .3s"></span>
+              <span id="bridge-set-info" style="color:var(--text2)">กำลังตรวจสอบ...</span>
+            </div>
+            <div class="form-group" style="margin-bottom:14px">
+              <label class="form-label">ช่วงเวลาดึงข้อมูล</label>
+              <select id="bridge-period" class="form-input" onchange="setBridgePeriod(+this.value)" disabled>
+                <option value="7">7 วัน</option>
+                <option value="30" selected>30 วัน</option>
+                <option value="90">90 วัน</option>
+                <option value="365">1 ปี</option>
+                <option value="1095">ทั้งหมด</option>
+              </select>
+            </div>
+            <div class="form-group" style="margin-bottom:14px">
+              <label class="form-label">Auto sync</label>
+              <select id="bridge-interval" class="form-input" onchange="setBridgeInterval(+this.value)" disabled>
+                <option value="0" selected>ปิด</option>
+                <option value="60">1 นาที</option>
+                <option value="300">5 นาที</option>
+                <option value="900">15 นาที</option>
+                <option value="1800">30 นาที</option>
+              </select>
+            </div>
+            <div class="form-group" style="margin-bottom:14px">
+              <label class="form-label">เริ่มพร้อม Windows</label>
+              <label style="display:flex;align-items:center;gap:8px;cursor:pointer;padding:4px 0">
+                <input type="checkbox" id="bridge-startup" onchange="setBridgeStartup(this.checked)" disabled
+                       style="width:16px;height:16px;accent-color:var(--purple);cursor:pointer">
+                <span style="font-size:13px;color:var(--text2)">เปิดอัตโนมัติเมื่อเริ่ม Windows</span>
+              </label>
+            </div>
+            <div id="bridge-download-row" style="display:none">
+              <a href="https://github.com/MisterZerograde/Dosho-app/releases/download/latest/mt5_bridge.exe"
+                 class="btn" style="width:100%;justify-content:center;text-decoration:none;display:flex">
+                ⬇ ดาวน์โหลด mt5_bridge.exe
+              </a>
+              <div style="font-size:11px;color:var(--text3);margin-top:8px;line-height:1.7">
+                1. เปิดไฟล์ที่ดาวน์โหลด → ไอคอนจะปรากฏใน System Tray<br>
+                2. เปิด MetaTrader 5 แล้วล็อกอิน<br>
+                3. กลับมาที่นี่ — การตั้งค่าจะเปิดใช้งานโดยอัตโนมัติ
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -2932,6 +2980,34 @@ function _updateDot(state, title) {
   if (btn) btn.title = title;
 }
 
+function _updateBridgeSettings(d) {
+  const dot   = document.getElementById('bridge-set-dot');
+  const info  = document.getElementById('bridge-set-info');
+  const dlRow = document.getElementById('bridge-download-row');
+  const perEl = document.getElementById('bridge-period');
+  const intEl = document.getElementById('bridge-interval');
+  const stEl  = document.getElementById('bridge-startup');
+  if (!dot) return;
+  const online = d && d.bridge === 'ok';
+  dot.style.background = online ? (d.connected ? '#22c55e' : '#f59e0b') : '#6b7280';
+  if (online) {
+    const bal  = d.balance != null ? `  ${Number(d.balance).toLocaleString()} ${d.currency || ''}` : '';
+    const sync = d.lastSync ? `  •  ซิงค์ล่าสุด ${d.lastSync.time} (${d.lastSync.count} รายการ)` : '';
+    info.textContent = d.connected
+      ? `#${d.login} @ ${d.server}${bal}${sync}`
+      : `Bridge พร้อม — MT5 ยังไม่ได้เชื่อมต่อ${sync}`;
+    if (dlRow) dlRow.style.display = 'none';
+    [perEl, intEl, stEl].forEach(el => { if (el) el.disabled = false; });
+    if (perEl) perEl.value = d.config?.period_days   ?? 30;
+    if (intEl) intEl.value = d.config?.interval_secs ?? 0;
+    if (stEl)  stEl.checked = !!d.startup;
+  } else {
+    info.textContent = 'Bridge ออฟไลน์ — ดาวน์โหลดและเปิด mt5_bridge.exe';
+    if (dlRow) dlRow.style.display = 'block';
+    [perEl, intEl, stEl].forEach(el => { if (el) el.disabled = true; });
+  }
+}
+
 async function checkMT5Bridge() {
   try {
     const res = await fetch('http://127.0.0.1:5678/status', { signal: AbortSignal.timeout(2000) });
@@ -2944,10 +3020,28 @@ async function checkMT5Bridge() {
     } else {
       _updateDot('warn', 'Bridge กำลังทำงาน — MT5 ยังไม่ได้เชื่อมต่อ\nเปิด MetaTrader 5 แล้วล็อกอิน');
     }
+    _updateBridgeSettings(d);
   } catch {
     _updateDot('offline', 'MT5 Bridge ออฟไลน์\nคลิกเพื่อดูวิธีติดตั้ง');
     if (!window.__ELECTRON__) _showMT5SetupModal();
+    _updateBridgeSettings(null);
   }
+}
+
+async function setBridgePeriod(days) {
+  try { await fetch('http://127.0.0.1:5678/config', { method: 'POST',
+    headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ period_days: days }) }); }
+  catch {}
+}
+async function setBridgeInterval(secs) {
+  try { await fetch('http://127.0.0.1:5678/config', { method: 'POST',
+    headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ interval_secs: secs }) }); }
+  catch {}
+}
+async function setBridgeStartup(enable) {
+  try { await fetch('http://127.0.0.1:5678/startup', { method: 'POST',
+    headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ enable }) }); }
+  catch {}
 }
 
 function _showMT5SetupModal() {

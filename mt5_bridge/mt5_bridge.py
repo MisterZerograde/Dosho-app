@@ -180,8 +180,9 @@ def _cors(response):
 @app.route("/status")
 def route_status():
     resp = dict(_status)
-    resp["bridge"]  = "ok"
-    resp["version"] = VERSION
+    resp["bridge"]   = "ok"
+    resp["version"]  = VERSION
+    resp["startup"]  = _startup_enabled()
     resp["config"]  = {
         "period_days":   _config.get("period_days", 30),
         "interval_secs": _config.get("interval_secs", 0),
@@ -200,6 +201,14 @@ def route_set_config():
     if "interval_secs" in data: _config["interval_secs"] = int(data["interval_secs"])
     _save_config()
     return jsonify({"ok": True, "config": _config})
+
+@app.route("/startup", methods=["POST", "OPTIONS"])
+def route_startup():
+    if request.method == "OPTIONS":
+        return jsonify({}), 200
+    data = request.get_json(force=True, silent=True) or {}
+    _set_startup(bool(data.get("enable", False)))
+    return jsonify({"ok": True, "startup": _startup_enabled()})
 
 @app.route("/sync")
 def route_sync():

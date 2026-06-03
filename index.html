@@ -81,6 +81,8 @@ body{font-family:'Mitr',-apple-system,sans-serif;background:var(--bg);color:var(
 
 /* ─── KPI ROW ─── */
 .kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;width:100%}
+.period-pill{padding:4px 11px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;border:1.5px solid var(--border2);background:var(--bg2);color:var(--text2);transition:background .15s,color .15s,border-color .15s}
+.period-pill.active{background:var(--purple);color:#fff;border-color:var(--purple)}
 .kpi-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 16px;box-shadow:0 1px 3px rgba(40,44,103,0.05);transition:transform .18s,box-shadow .18s,border-color .18s;cursor:pointer}
 .kpi-card:hover{transform:translateY(-4px);box-shadow:0 8px 24px rgba(40,44,103,0.12);border-color:rgba(62,69,184,0.2)}
 .kpi-lbl{font-size:11px;color:var(--text2);font-weight:500;margin-bottom:6px}
@@ -581,6 +583,14 @@ body{font-family:'Mitr',-apple-system,sans-serif;background:var(--bg);color:var(
     <!-- ══ DASHBOARD ══ -->
     <div id="panel-dashboard" class="tab-panel active">
       <div id="dash-content" style="display:flex;flex-direction:column;flex:1;min-height:0;overflow:hidden;gap:10px">
+        <!-- Period filter -->
+        <div style="display:flex;gap:4px;flex-shrink:0">
+          <button class="period-pill active" data-days="0"   onclick="setDashPeriod(0)">ทั้งหมด</button>
+          <button class="period-pill"        data-days="7"   onclick="setDashPeriod(7)">7 วัน</button>
+          <button class="period-pill"        data-days="30"  onclick="setDashPeriod(30)">30 วัน</button>
+          <button class="period-pill"        data-days="90"  onclick="setDashPeriod(90)">90 วัน</button>
+          <button class="period-pill"        data-days="365" onclick="setDashPeriod(365)">1 ปี</button>
+        </div>
         <!-- KPI Row -->
         <div class="kpi-row">
           <!-- Net P&L -->
@@ -793,6 +803,13 @@ body{font-family:'Mitr',-apple-system,sans-serif;background:var(--bg);color:var(
 
     <!-- ══ REPORTS ══ -->
     <div id="panel-reports" class="tab-panel">
+      <div style="display:flex;gap:4px;margin-bottom:10px;flex-shrink:0">
+        <button class="period-pill active" data-days="0"   onclick="setDashPeriod(0)">ทั้งหมด</button>
+        <button class="period-pill"        data-days="7"   onclick="setDashPeriod(7)">7 วัน</button>
+        <button class="period-pill"        data-days="30"  onclick="setDashPeriod(30)">30 วัน</button>
+        <button class="period-pill"        data-days="90"  onclick="setDashPeriod(90)">90 วัน</button>
+        <button class="period-pill"        data-days="365" onclick="setDashPeriod(365)">1 ปี</button>
+      </div>
       <div class="rpt-grid">
         <div class="card">
           <div class="card-hd"><span class="card-title">สรุปผลงานการเทรด</span></div>
@@ -1145,6 +1162,17 @@ function acctKey(base, id) {
 }
 
 let trades = JSON.parse(localStorage.getItem(acctKey('dosho_trades')) || '[]');
+let dashPeriod = 0;
+function viewTrades() {
+  if (!dashPeriod) return trades;
+  const cutoff = Date.now() - dashPeriod * 86400000;
+  return trades.filter(t => getTradeTimeMs(t.openDt) >= cutoff);
+}
+function setDashPeriod(days) {
+  dashPeriod = days;
+  document.querySelectorAll('.period-pill').forEach(el => el.classList.toggle('active', +el.dataset.days === days));
+  renderDashboard(); renderReports();
+}
 let journal = JSON.parse(localStorage.getItem(acctKey('dosho_journal')) || '{}');
 let settings = JSON.parse(localStorage.getItem('dosho_settings') || '{"name":"Trader","balance":10000,"strategy":"ระบบเทรด","currency":"USD","decimals":2,"mt5Timezone":2,"dayResetHour":0}');
 // sync settings from active account
@@ -1520,7 +1548,8 @@ function calcStats(ts) {
 
 /* ═══ DASHBOARD ═══ */
 function renderDashboard() {
-  const s = calcStats(trades);
+  const vts = viewTrades();
+  const s = calcStats(vts);
 
   const fmt = (v, pos) => {
     if(v === null || v === undefined) return '—';
@@ -1534,7 +1563,7 @@ function renderDashboard() {
     const pnlEl = document.getElementById('kpi-pnl');
     pnlEl.textContent = fmt(s.netPnl, true);
     pnlEl.className = 'kpi-val ' + (s.netPnl >= 0 ? 'g' : 'r');
-    document.getElementById('kpi-pnl-sub').textContent = `ทั้งหมด ${trades.length} รายการ`;
+    document.getElementById('kpi-pnl-sub').textContent = `${dashPeriod ? dashPeriod+'d · ' : ''}${vts.length} รายการ`;
 
     // Profit factor open-top "C" arc — visible arc length = (300/360) * 2π * 24 ≈ 125.66
     const pfVal = s.pf === Infinity ? 99 : s.pf !== null ? s.pf : 0;
@@ -1554,7 +1583,7 @@ function renderDashboard() {
     wrEl.className = 'kpi-val ' + (s.wr >= 50 ? 'g' : 'r');
     document.getElementById('kpi-wr-sub').textContent = `ชนะ ${s.wins.length} / แพ้ ${s.losses.length}`;
     const semiLen = Math.PI * 24;
-    const wrFrac = trades.length ? s.wins.length / trades.length : 0;
+    const wrFrac = vts.length ? s.wins.length / vts.length : 0;
     const greenLen = semiLen * wrFrac;
     const redLen   = semiLen - greenLen;
     const wrG = document.getElementById('wr-arc-green');
@@ -1623,7 +1652,8 @@ function renderRecentTrades() {
 function renderStatsSummary() {
   const el = document.getElementById('stats-summary');
   if (!el) return;
-  const s = calcStats(trades);
+  const vts = viewTrades();
+  const s = calcStats(vts);
   const cur = getCurrencySymbol();
   const fmtV = v => v === null || v === undefined ? '—' : Math.abs(v).toFixed(getPnlDecimals()) + cur;
   const row = (lbl, val, color, onclick) =>
@@ -1637,7 +1667,7 @@ function renderStatsSummary() {
   }
   const g = 'var(--green)', r = 'var(--red)';
   el.innerHTML = [
-    row('จำนวนครั้งที่เทรด', trades.length + ' ครั้ง'),
+    row('จำนวนครั้งที่เทรด', vts.length + ' ครั้ง'),
     row('กำไร/ขาดทุนสุทธิ', (s.netPnl >= 0 ? '+' : '−') + Math.abs(s.netPnl).toFixed(getPnlDecimals()) + cur, s.netPnl >= 0 ? g : r, "openFormulaModal('pnl')"),
     row('อัตราการชนะ (Win Rate)', s.wr.toFixed(1) + '%', s.wr >= 50 ? g : r, "openFormulaModal('wr')"),
     row('ปัจจัยการทำกำไร (Profit Factor)', s.pf === Infinity ? '∞' : s.pf !== null ? s.pf.toFixed(2) : '—', s.pf >= 1 ? g : r, "openFormulaModal('pf')"),
@@ -1936,13 +1966,14 @@ function renderTradeTable() {
 
 /* ═══ REPORTS ═══ */
 function renderReports() {
-  const s = calcStats(trades);
+  const vts = viewTrades();
+  const s = calcStats(vts);
   const _rD = getPnlDecimals();
   const fmt = v => v !== null && v !== undefined ? (v>=0?'+':'') + Math.abs(v).toLocaleString('th-TH',{minimumFractionDigits:_rD,maximumFractionDigits:_rD}) + getCurrencySymbol() : '—';
   const fmtPlain = v => v !== null && v !== undefined ? Math.abs(v).toLocaleString('th-TH',{minimumFractionDigits:_rD,maximumFractionDigits:_rD}) + getCurrencySymbol() : '—';
   const dash = '—';
 
-  document.getElementById('r-trades').textContent = trades.length || dash;
+  document.getElementById('r-trades').textContent = vts.length || dash;
   document.getElementById('r-pnl').textContent = s ? fmt(s.netPnl) : dash;
   document.getElementById('r-pnl').className = 'rpt-stat-val ' + (s && s.netPnl >= 0 ? 'green' : s ? 'red' : '');
   document.getElementById('r-wr').textContent = s ? s.wr.toFixed(1)+'%' : dash;
@@ -1962,7 +1993,7 @@ function renderReports() {
 
   // symbol breakdown
   const symMap = {};
-  trades.forEach(t => {
+  vts.forEach(t => {
     if(!symMap[t.symbol]) symMap[t.symbol] = { pnl:0, count:0, wins:0 };
     symMap[t.symbol].pnl += t.pnl;
     symMap[t.symbol].count++;
@@ -1989,8 +2020,8 @@ function renderReports() {
   // reports chart
   if(rptChartInst) { rptChartInst.destroy(); rptChartInst = null; }
   const ctx = document.getElementById('rptChart').getContext('2d');
-  if(trades.length) {
-    const sorted = [...trades].sort((a,b) => getTradeTimeMs(a.openDt)-getTradeTimeMs(b.openDt));
+  if(vts.length) {
+    const sorted = [...vts].sort((a,b) => getTradeTimeMs(a.openDt)-getTradeTimeMs(b.openDt));
     let cum = 0;
     const labels = sorted.map(t => {
       if(!t.openDt) return '';

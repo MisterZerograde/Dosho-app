@@ -326,32 +326,30 @@ def _build_menu():
     items.append(pystray.MenuItem(sync_line, None, enabled=False))
     items.append(pystray.Menu.SEPARATOR)
 
-    # Period submenu
+    def _period_item(lbl, days):
+        def action(icon, item):
+            _set_period(days)
+            icon.update_menu()
+        def checker(item):
+            return _config.get("period_days") == days
+        return pystray.MenuItem(lbl, action, checked=checker, radio=True)
+
+    def _interval_item(lbl, secs):
+        def action(icon, item):
+            _set_interval(secs)
+            icon.update_menu()
+        def checker(item):
+            return _config.get("interval_secs") == secs
+        return pystray.MenuItem(lbl, action, checked=checker, radio=True)
+
     items.append(pystray.MenuItem(
         f"ช่วงเวลา: {_period_label()}",
-        pystray.Menu(*[
-            pystray.MenuItem(
-                lbl,
-                lambda icon, item, d=days: (_set_period(d), icon.update_menu()),
-                checked=lambda item, d=days: _config.get("period_days") == d,
-                radio=True,
-            )
-            for lbl, days in PERIOD_OPTIONS
-        ])
+        pystray.Menu(*[_period_item(lbl, days) for lbl, days in PERIOD_OPTIONS])
     ))
 
-    # Auto-sync submenu
     items.append(pystray.MenuItem(
         f"Auto sync: {_interval_label()}",
-        pystray.Menu(*[
-            pystray.MenuItem(
-                lbl,
-                lambda icon, item, s=secs: (_set_interval(s), icon.update_menu()),
-                checked=lambda item, s=secs: _config.get("interval_secs") == s,
-                radio=True,
-            )
-            for lbl, secs in INTERVAL_OPTIONS
-        ])
+        pystray.Menu(*[_interval_item(lbl, secs) for lbl, secs in INTERVAL_OPTIONS])
     ))
 
     items += [

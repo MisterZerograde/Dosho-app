@@ -1193,28 +1193,65 @@ function getBkkDate(dtStr) {
   const trueUtcMs = Date.UTC(year, month, day, hour, minute) - (brokerTz * 60 * 60 * 1000);
   return new Date(trueUtcMs);
 }
+function pad2(n) { return String(n).padStart(2,'0'); }
+function hasExplicitTimezone(dtStr) {
+  return !!dtStr && (dtStr.includes('Z') || (dtStr.includes('+') && dtStr.indexOf('+') > 10) || (dtStr.split('-').length > 3));
+}
+function parseBrokerLocalParts(dtStr) {
+  if (!dtStr) return null;
+  const parts = dtStr.split(/[-T:]/);
+  if (parts.length < 3) return null;
+  return {
+    year: parseInt(parts[0], 10),
+    month: parseInt(parts[1], 10),
+    day: parseInt(parts[2], 10),
+    hour: parseInt(parts[3] || '0', 10),
+    minute: parseInt(parts[4] || '0', 10),
+  };
+}
+function getBrokerDateParts(dtStr) {
+  if (!dtStr) return null;
+  if (!hasExplicitTimezone(dtStr)) return parseBrokerLocalParts(dtStr);
+  const brokerTz = parseFloat(settings.mt5Timezone ?? 2);
+  const shifted = new Date(new Date(dtStr).getTime() + brokerTz * 60 * 60 * 1000);
+  return {
+    year: shifted.getUTCFullYear(),
+    month: shifted.getUTCMonth() + 1,
+    day: shifted.getUTCDate(),
+    hour: shifted.getUTCHours(),
+    minute: shifted.getUTCMinutes(),
+  };
+}
+function getBrokerDayKey(dtStr) {
+  const p = getBrokerDateParts(dtStr);
+  if (!p || [p.year, p.month, p.day].some(Number.isNaN)) return '';
+  return `${p.year}-${pad2(p.month)}-${pad2(p.day)}`;
+}
+function getBrokerMonthKey(dtStr) {
+  const p = getBrokerDateParts(dtStr);
+  if (!p || [p.year, p.month].some(Number.isNaN)) return '';
+  return `${p.year}-${pad2(p.month)}`;
+}
+function getTradeTimeMs(dtStr) {
+  const d = getBkkDate(dtStr);
+  return d ? d.getTime() : 0;
+}
 function fmtBKK(dtStr, opts) {
   if (!dtStr) return '—';
   
   const hasTime = opts && (opts.hour !== undefined || opts.minute !== undefined);
   const hasDate = opts && (opts.day !== undefined || opts.month !== undefined || opts.year !== undefined || opts.weekday !== undefined);
   
-  if (dtStr.includes('Z') || (dtStr.includes('+') && dtStr.indexOf('+') > 10) || (dtStr.split('-').length > 3)) {
+  if (hasExplicitTimezone(dtStr) && !hasDate) {
     return new Date(dtStr).toLocaleString('th-TH', { timeZone: 'Asia/Bangkok', ...opts });
   }
   
-  const parts = dtStr.split(/[-T:]/);
-  if (parts.length < 5) {
+  const brokerParts = getBrokerDateParts(dtStr);
+  if (!brokerParts || [brokerParts.year, brokerParts.month, brokerParts.day].some(Number.isNaN)) {
     return new Date(dtStr).toLocaleString('th-TH', { timeZone: 'Asia/Bangkok', ...opts });
   }
   
-  const year = parseInt(parts[0], 10);
-  const month = parseInt(parts[1], 10) - 1;
-  const day = parseInt(parts[2], 10);
-  const hour = parseInt(parts[3], 10);
-  const minute = parseInt(parts[4], 10);
-  
-  const brokerUtcDate = new Date(Date.UTC(year, month, day, hour, minute));
+  const brokerUtcDate = new Date(Date.UTC(brokerParts.year, brokerParts.month - 1, brokerParts.day, brokerParts.hour || 0, brokerParts.minute || 0));
   const bkkDate = getBkkDate(dtStr);
   
   if (hasDate && hasTime) {
@@ -1335,7 +1372,7 @@ function saveTrade() {
     trades.push(trade);
   }
   // sort by open date
-  trades.sort((a,b) => new Date(a.openDt) - new Date(b.openDt));
+  trades.sort((a,b) => getTradeTimeMs(a.openDt) - getTradeTimeMs(b.openDt));
   persist();
   closeModal();
   renderDashboard();
@@ -1481,7 +1518,7 @@ function renderDashboard() {
 function renderRecentTrades() {
   const el = document.getElementById('recent-trades-list');
   if (!el) return;
-  const recent = [...trades].sort((a, b) => new Date(b.openDt) - new Date(a.openDt)).slice(0, 10);
+  const recent = [...trades].sort((a, b) => getTradeTimeMs(b.openDt) - getTradeTimeMs(a.openDt)).slice(0, 10);
   if (!recent.length) {
     el.innerHTML = '<div style="text-align:center;padding:24px;color:var(--text3);font-size:12px">ยังไม่มีรายการเทรด</div>';
     return;
@@ -1655,7 +1692,7 @@ function renderCalendar() {
   const dayMap = {};
   trades.forEach(t => {
     if(!t.openDt) return;
-    const [yStr, mStr, dStr] = t.openDt.slice(0, 10).split('-');
+    const [yStr, mStr, dStr] = getBrokerDayKey(t.openDt).split('-');
     const year = parseInt(yStr, 10);
     const month = parseInt(mStr, 10) - 1;
     const day = parseInt(dStr, 10);
@@ -1669,7 +1706,7 @@ function renderCalendar() {
   // monthly stats (using MT5 condition/broker time)
   const monthTrades = trades.filter(t => {
     if(!t.openDt) return false;
-    const [yStr, mStr] = t.openDt.slice(0, 7).split('-');
+    const [yStr, mStr] = getBrokerMonthKey(t.openDt).split('-');
     const year = parseInt(yStr, 10);
     const month = parseInt(mStr, 10) - 1;
     return year === calYear && month === calMonth;
@@ -1877,11 +1914,11 @@ function renderReports() {
   if(rptChartInst) { rptChartInst.destroy(); rptChartInst = null; }
   const ctx = document.getElementById('rptChart').getContext('2d');
   if(trades.length) {
-    const sorted = [...trades].sort((a,b) => new Date(a.openDt)-new Date(b.openDt));
+    const sorted = [...trades].sort((a,b) => getTradeTimeMs(a.openDt)-getTradeTimeMs(b.openDt));
     let cum = 0;
     const labels = sorted.map(t => {
       if(!t.openDt) return '';
-      const [yStr, mStr, dStr] = t.openDt.slice(0, 10).split('-');
+      const [yStr, mStr, dStr] = getBrokerDayKey(t.openDt).split('-');
       return `${parseInt(dStr, 10)}/${parseInt(mStr, 10)}`;
     });
     const data = sorted.map(t => { cum += t.pnl; return +cum.toFixed(2); });
@@ -2410,8 +2447,8 @@ function clearAllData() {
 /* ═══ DAY DETAIL MODAL ═══ */
 function openDayModal(dateStr) {
   const dayTrades = trades
-    .filter(t => t.openDt && t.openDt.slice(0,10) === dateStr)
-    .sort((a,b) => new Date(a.openDt) - new Date(b.openDt));
+    .filter(t => t.openDt && getBrokerDayKey(t.openDt) === dateStr)
+    .sort((a,b) => getTradeTimeMs(a.openDt) - getTradeTimeMs(b.openDt));
   if(!dayTrades.length) return;
 
   const dateObj = new Date(dateStr + 'T00:00:00');
@@ -2477,7 +2514,7 @@ function closeDayOnBg(e) { if(e.target === document.getElementById('day-overlay'
 
 function openSymbolModal(sym) {
   const symTrades = trades.filter(t => t.symbol === sym)
-    .sort((a,b) => new Date(b.openDt) - new Date(a.openDt));
+    .sort((a,b) => getTradeTimeMs(b.openDt) - getTradeTimeMs(a.openDt));
   if(!symTrades.length) return;
 
   const wins = symTrades.filter(t => t.pnl > 0);
@@ -2576,10 +2613,10 @@ function openWeekModal(wi, week, dayMap) {
   const weekTrades = [];
   week.filter(d => d && dayMap[d]).forEach(d => {
     const dateStr = `${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-    trades.filter(t => t.openDt && t.openDt.slice(0,10) === dateStr)
+    trades.filter(t => t.openDt && getBrokerDayKey(t.openDt) === dateStr)
       .forEach(t => weekTrades.push(t));
   });
-  weekTrades.sort((a,b) => new Date(a.openDt) - new Date(b.openDt));
+  weekTrades.sort((a,b) => getTradeTimeMs(a.openDt) - getTradeTimeMs(b.openDt));
   const wkPnl = weekTrades.reduce((s,t) => s+t.pnl, 0);
   const wins = weekTrades.filter(t=>t.pnl>0).length;
   const losses = weekTrades.filter(t=>t.pnl<0).length;
@@ -2800,7 +2837,7 @@ function handleCSVImport(e) {
       const dup = trades.some(x => x.openDt === t.openDt && x.symbol === t.symbol && Math.abs(x.pnl - t.pnl) < 0.01);
       if(!dup) { trades.push({ ...t, source: 'import' }); added++; }
     });
-    trades.sort((a,b) => new Date(a.openDt) - new Date(b.openDt));
+    trades.sort((a,b) => getTradeTimeMs(a.openDt) - getTradeTimeMs(b.openDt));
     persist();
     renderDashboard(); renderCalendar(); renderTradeTable(); renderReports();
     const status = document.getElementById('import-status');
@@ -2929,7 +2966,7 @@ async function syncMT5() {
       const dup = trades.some(x => x.openDt === t.openDt && x.symbol === t.symbol && Math.abs(x.pnl - t.pnl) < 0.01);
       if (!dup) { trades.push({ ...t, source: 'sync' }); added++; }
     });
-    trades.sort((a, b) => new Date(a.openDt) - new Date(b.openDt));
+    trades.sort((a, b) => getTradeTimeMs(a.openDt) - getTradeTimeMs(b.openDt));
     persist();
     renderDashboard(); renderCalendar(); renderTradeTable(); renderReports();
     await checkMT5Bridge();

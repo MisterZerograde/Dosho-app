@@ -919,6 +919,20 @@ body{font-family:'Mitr',-apple-system,sans-serif;background:var(--bg);color:var(
                 <option value="14">UTC +14</option>
               </select>
             </div>
+            <div class="form-group" style="margin-top:14px">
+              <label class="form-label">เวลาเริ่มต้นวันใหม่ (เวลา BKK)</label>
+              <select class="form-input" id="set-day-reset-hour" onchange="saveSettings()">
+                <option value="0">00:00 — เที่ยงคืน (ค่าเริ่มต้น)</option>
+                <option value="1">01:00</option>
+                <option value="2">02:00</option>
+                <option value="3">03:00</option>
+                <option value="4">04:00</option>
+                <option value="5">05:00</option>
+                <option value="6">06:00</option>
+                <option value="7">07:00</option>
+                <option value="8">08:00</option>
+              </select>
+            </div>
             <button class="btn btn-red" onclick="clearAllData()" style="margin-top:18px;width:100%">ล้างข้อมูลทั้งหมด</button>
           </div>
         </div>
@@ -1084,7 +1098,7 @@ function acctKey(base, id) {
 
 let trades = JSON.parse(localStorage.getItem(acctKey('dosho_trades')) || '[]');
 let journal = JSON.parse(localStorage.getItem(acctKey('dosho_journal')) || '{}');
-let settings = JSON.parse(localStorage.getItem('dosho_settings') || '{"name":"Trader","balance":10000,"strategy":"ระบบเทรด","currency":"USD","decimals":2,"mt5Timezone":2}');
+let settings = JSON.parse(localStorage.getItem('dosho_settings') || '{"name":"Trader","balance":10000,"strategy":"ระบบเทรด","currency":"USD","decimals":2,"mt5Timezone":2,"dayResetHour":0}');
 // sync settings from active account
 (function(){const a=accounts.find(x=>x.id===activeAccountId);if(a){settings.balance=a.balance;settings.currency=a.currency;settings.strategy=a.strategy;}})();
 let checklist = JSON.parse(localStorage.getItem(acctKey('dosho_checklist')) || '{"entry":[],"exit":[]}');
@@ -1222,15 +1236,29 @@ function getBrokerDateParts(dtStr) {
     minute: shifted.getUTCMinutes(),
   };
 }
-function getBrokerDayKey(dtStr) {
+function getTradingDayKey(dtStr) {
   const p = getBrokerDateParts(dtStr);
   if (!p || [p.year, p.month, p.day].some(Number.isNaN)) return '';
   return `${p.year}-${pad2(p.month)}-${pad2(p.day)}`;
 }
-function getBrokerMonthKey(dtStr) {
+function getTradingMonthKey(dtStr) {
   const p = getBrokerDateParts(dtStr);
   if (!p || [p.year, p.month].some(Number.isNaN)) return '';
   return `${p.year}-${pad2(p.month)}`;
+}
+function getTradingDayKey(dtStr) {
+  const utc = getBkkDate(dtStr);
+  if (!utc) return '';
+  const resetHour = parseInt(settings.dayResetHour ?? 0);
+  const shifted = new Date(utc.getTime() + (7 - resetHour) * 3600000);
+  return `${shifted.getUTCFullYear()}-${pad2(shifted.getUTCMonth()+1)}-${pad2(shifted.getUTCDate())}`;
+}
+function getTradingMonthKey(dtStr) {
+  const utc = getBkkDate(dtStr);
+  if (!utc) return '';
+  const resetHour = parseInt(settings.dayResetHour ?? 0);
+  const shifted = new Date(utc.getTime() + (7 - resetHour) * 3600000);
+  return `${shifted.getUTCFullYear()}-${pad2(shifted.getUTCMonth()+1)}`;
 }
 function getTradeTimeMs(dtStr) {
   const d = getBkkDate(dtStr);
@@ -1692,7 +1720,7 @@ function renderCalendar() {
   const dayMap = {};
   trades.forEach(t => {
     if(!t.openDt) return;
-    const [yStr, mStr, dStr] = getBrokerDayKey(t.openDt).split('-');
+    const [yStr, mStr, dStr] = getTradingDayKey(t.openDt).split('-');
     const year = parseInt(yStr, 10);
     const month = parseInt(mStr, 10) - 1;
     const day = parseInt(dStr, 10);
@@ -1706,7 +1734,7 @@ function renderCalendar() {
   // monthly stats (using MT5 condition/broker time)
   const monthTrades = trades.filter(t => {
     if(!t.openDt) return false;
-    const [yStr, mStr] = getBrokerMonthKey(t.openDt).split('-');
+    const [yStr, mStr] = getTradingMonthKey(t.openDt).split('-');
     const year = parseInt(yStr, 10);
     const month = parseInt(mStr, 10) - 1;
     return year === calYear && month === calMonth;
@@ -1918,7 +1946,7 @@ function renderReports() {
     let cum = 0;
     const labels = sorted.map(t => {
       if(!t.openDt) return '';
-      const [yStr, mStr, dStr] = getBrokerDayKey(t.openDt).split('-');
+      const [yStr, mStr, dStr] = getTradingDayKey(t.openDt).split('-');
       return `${parseInt(dStr, 10)}/${parseInt(mStr, 10)}`;
     });
     const data = sorted.map(t => { cum += t.pnl; return +cum.toFixed(2); });
@@ -2410,6 +2438,7 @@ function loadSettings() {
   document.getElementById('set-currency').value = settings.currency || 'USD';
   document.getElementById('set-decimals').value = settings.decimals ?? 2;
   document.getElementById('set-mt5-timezone').value = settings.mt5Timezone ?? 2;
+  document.getElementById('set-day-reset-hour').value = settings.dayResetHour ?? 0;
   document.getElementById('lbl-set-balance').textContent = 'เงินทุนเริ่มต้น (' + getCurrencySymbol() + ')';
   updateSidebar();
 }
@@ -2417,12 +2446,14 @@ function saveSettings() {
   const prevCurrency = settings.currency;
   const prevDecimals = settings.decimals;
   const prevTimezone = settings.mt5Timezone;
+  const prevDayResetHour = settings.dayResetHour;
   settings.name = document.getElementById('set-name').value;
   settings.balance = parseFloat(document.getElementById('set-balance').value) || 0;
   settings.strategy = document.getElementById('set-strategy').value;
   settings.currency = document.getElementById('set-currency').value;
   settings.decimals = parseInt(document.getElementById('set-decimals').value);
   settings.mt5Timezone = parseFloat(document.getElementById('set-mt5-timezone').value);
+  settings.dayResetHour = parseInt(document.getElementById('set-day-reset-hour').value);
   localStorage.setItem('dosho_settings', JSON.stringify(settings));
   const a = accounts.find(x => x.id === activeAccountId);
   if(a) { a.balance = settings.balance; a.currency = settings.currency; a.strategy = settings.strategy; persistAccounts(); }
@@ -2430,7 +2461,7 @@ function saveSettings() {
   document.getElementById('lbl-f-pnl').textContent = 'กำไร/ขาดทุนสุทธิ (' + getCurrencySymbol() + ') *';
   updateSidebar();
   renderChecklist();
-  if (settings.currency !== prevCurrency || settings.decimals !== prevDecimals || settings.mt5Timezone !== prevTimezone) {
+  if (settings.currency !== prevCurrency || settings.decimals !== prevDecimals || settings.mt5Timezone !== prevTimezone || settings.dayResetHour !== prevDayResetHour) {
     renderDashboard(); renderCalendar(); renderTradeTable(); renderReports();
   }
 }
@@ -2447,7 +2478,7 @@ function clearAllData() {
 /* ═══ DAY DETAIL MODAL ═══ */
 function openDayModal(dateStr) {
   const dayTrades = trades
-    .filter(t => t.openDt && getBrokerDayKey(t.openDt) === dateStr)
+    .filter(t => t.openDt && getTradingDayKey(t.openDt) === dateStr)
     .sort((a,b) => getTradeTimeMs(a.openDt) - getTradeTimeMs(b.openDt));
   if(!dayTrades.length) return;
 
@@ -2613,7 +2644,7 @@ function openWeekModal(wi, week, dayMap) {
   const weekTrades = [];
   week.filter(d => d && dayMap[d]).forEach(d => {
     const dateStr = `${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-    trades.filter(t => t.openDt && getBrokerDayKey(t.openDt) === dateStr)
+    trades.filter(t => t.openDt && getTradingDayKey(t.openDt) === dateStr)
       .forEach(t => weekTrades.push(t));
   });
   weekTrades.sort((a,b) => getTradeTimeMs(a.openDt) - getTradeTimeMs(b.openDt));

@@ -887,6 +887,38 @@ body{font-family:'Mitr',-apple-system,sans-serif;background:var(--bg);color:var(
                 <option value="JPY">JPY (¥)</option>
               </select>
             </div>
+            <div class="form-group" style="margin-top:14px">
+              <label class="form-label">เขตเวลา MT5 / โบรกเกอร์ (MT5/Broker Timezone)</label>
+              <select class="form-input" id="set-mt5-timezone" onchange="saveSettings()">
+                <option value="-12">UTC -12</option>
+                <option value="-11">UTC -11</option>
+                <option value="-10">UTC -10</option>
+                <option value="-9">UTC -9</option>
+                <option value="-8">UTC -8</option>
+                <option value="-7">UTC -7</option>
+                <option value="-6">UTC -6</option>
+                <option value="-5">UTC -5</option>
+                <option value="-4">UTC -4</option>
+                <option value="-3">UTC -3</option>
+                <option value="-2">UTC -2</option>
+                <option value="-1">UTC -1</option>
+                <option value="0">UTC +0 (GMT)</option>
+                <option value="1">UTC +1 (CET/London summer)</option>
+                <option value="2">UTC +2 (EET - โบรกเกอร์ส่วนใหญ่ในฤดูหนาว)</option>
+                <option value="3">UTC +3 (EEST - โบรกเกอร์ส่วนใหญ่ในฤดูร้อน)</option>
+                <option value="4">UTC +4</option>
+                <option value="5">UTC +5</option>
+                <option value="6">UTC +6</option>
+                <option value="7">UTC +7 (เวลาไทย BKK - ไม่แปลงเวลา)</option>
+                <option value="8">UTC +8 (โบรกเกอร์เอเชีย/สิงคโปร์)</option>
+                <option value="9">UTC +9</option>
+                <option value="10">UTC +10</option>
+                <option value="11">UTC +11</option>
+                <option value="12">UTC +12</option>
+                <option value="13">UTC +13</option>
+                <option value="14">UTC +14</option>
+              </select>
+            </div>
             <button class="btn btn-red" onclick="clearAllData()" style="margin-top:18px;width:100%">ล้างข้อมูลทั้งหมด</button>
           </div>
         </div>
@@ -1052,7 +1084,7 @@ function acctKey(base, id) {
 
 let trades = JSON.parse(localStorage.getItem(acctKey('dosho_trades')) || '[]');
 let journal = JSON.parse(localStorage.getItem(acctKey('dosho_journal')) || '{}');
-let settings = JSON.parse(localStorage.getItem('dosho_settings') || '{"name":"Trader","balance":10000,"strategy":"ระบบเทรด","currency":"USD","decimals":2}');
+let settings = JSON.parse(localStorage.getItem('dosho_settings') || '{"name":"Trader","balance":10000,"strategy":"ระบบเทรด","currency":"USD","decimals":2,"mt5Timezone":2}');
 // sync settings from active account
 (function(){const a=accounts.find(x=>x.id===activeAccountId);if(a){settings.balance=a.balance;settings.currency=a.currency;settings.strategy=a.strategy;}})();
 let checklist = JSON.parse(localStorage.getItem(acctKey('dosho_checklist')) || '{"entry":[],"exit":[]}');
@@ -1125,8 +1157,8 @@ function init() {
   document.getElementById('cal-prev').onclick = () => { if(--calMonth < 0){calMonth=11;calYear--;} renderCalendar(); };
   document.getElementById('cal-next').onclick = () => { if(++calMonth > 11){calMonth=0;calYear++;} renderCalendar(); };
 
-  // default datetime-local to now
-  const localNow = toLocalDT(new Date());
+  // default datetime-local to now (in broker time timezone offset)
+  const localNow = toLocalDT(getBrokerNow());
   document.getElementById('f-open-dt').value = localNow;
 
   checkMT5Bridge();
@@ -1137,9 +1169,35 @@ function toLocalDT(d) {
   const pad = n => String(n).padStart(2,'0');
   return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
+function getBrokerNow() {
+  const brokerTz = parseFloat(settings.mt5Timezone ?? 2);
+  const diffMs = (7 - brokerTz) * 60 * 60 * 1000;
+  return new Date(Date.now() - diffMs);
+}
+function getBkkDate(dtStr) {
+  if (!dtStr) return null;
+  // If it has timezone offset or 'Z', parse it natively
+  if (dtStr.includes('Z') || (dtStr.includes('+') && dtStr.indexOf('+') > 10) || (dtStr.split('-').length > 3)) {
+    return new Date(dtStr);
+  }
+  const parts = dtStr.split(/[-T:]/);
+  if (parts.length < 5) return new Date(dtStr);
+  const year = parseInt(parts[0], 10);
+  const month = parseInt(parts[1], 10) - 1;
+  const day = parseInt(parts[2], 10);
+  const hour = parseInt(parts[3], 10);
+  const minute = parseInt(parts[4], 10);
+  
+  const brokerTz = parseFloat(settings.mt5Timezone ?? 2);
+  // True UTC time of trade is: Broker Time - Broker timezone offset
+  const trueUtcMs = Date.UTC(year, month, day, hour, minute) - (brokerTz * 60 * 60 * 1000);
+  return new Date(trueUtcMs);
+}
 function fmtBKK(dtStr, opts) {
   if (!dtStr) return '—';
-  return new Date(dtStr).toLocaleString('th-TH', { timeZone: 'Asia/Bangkok', ...opts });
+  const bkkDate = getBkkDate(dtStr);
+  if (!bkkDate) return '—';
+  return bkkDate.toLocaleString('th-TH', { timeZone: 'Asia/Bangkok', ...opts });
 }
 
 /* ═══ MODAL ═══ */
@@ -1185,7 +1243,7 @@ function openModal(id) {
     document.getElementById('modal-title').textContent = 'บันทึกการเทรด';
     document.getElementById('f-symbol').value = '';
     setDir('BUY');
-    document.getElementById('f-open-dt').value = toLocalDT(new Date());
+    document.getElementById('f-open-dt').value = toLocalDT(getBrokerNow());
     document.getElementById('f-close-dt').value = '';
     document.getElementById('f-open-px').value = '';
     document.getElementById('f-close-px').value = '';
@@ -1553,24 +1611,28 @@ function renderCalendar() {
       : '<div class="cal-dow">จ.</div><div class="cal-dow">อ.</div><div class="cal-dow">พ.</div><div class="cal-dow">พฤ.</div><div class="cal-dow">ศ.</div>';
   }
 
-  // group trades by day for this month
+  // group trades by day for this month (using MT5 condition/broker time)
   const dayMap = {};
   trades.forEach(t => {
     if(!t.openDt) return;
-    const d = new Date(t.openDt);
-    if(d.getFullYear() === calYear && d.getMonth() === calMonth) {
-      const day = d.getDate();
+    const [yStr, mStr, dStr] = t.openDt.slice(0, 10).split('-');
+    const year = parseInt(yStr, 10);
+    const month = parseInt(mStr, 10) - 1;
+    const day = parseInt(dStr, 10);
+    if(year === calYear && month === calMonth) {
       if(!dayMap[day]) dayMap[day] = { pnl: 0, count: 0 };
       dayMap[day].pnl += t.pnl;
       dayMap[day].count++;
     }
   });
 
-  // monthly stats
+  // monthly stats (using MT5 condition/broker time)
   const monthTrades = trades.filter(t => {
     if(!t.openDt) return false;
-    const d = new Date(t.openDt);
-    return d.getFullYear()===calYear && d.getMonth()===calMonth;
+    const [yStr, mStr] = t.openDt.slice(0, 7).split('-');
+    const year = parseInt(yStr, 10);
+    const month = parseInt(mStr, 10) - 1;
+    return year === calYear && month === calMonth;
   });
   const ms = calcStats(monthTrades);
   const chipsEl = document.getElementById('cal-chips');
@@ -1778,8 +1840,9 @@ function renderReports() {
     const sorted = [...trades].sort((a,b) => new Date(a.openDt)-new Date(b.openDt));
     let cum = 0;
     const labels = sorted.map(t => {
-      const d = new Date(t.openDt);
-      return `${d.getDate()}/${d.getMonth()+1}`;
+      if(!t.openDt) return '';
+      const [yStr, mStr, dStr] = t.openDt.slice(0, 10).split('-');
+      return `${parseInt(dStr, 10)}/${parseInt(mStr, 10)}`;
     });
     const data = sorted.map(t => { cum += t.pnl; return +cum.toFixed(2); });
     const isPos = cum >= 0;
@@ -2269,17 +2332,20 @@ function loadSettings() {
   document.getElementById('set-strategy').value = settings.strategy || '';
   document.getElementById('set-currency').value = settings.currency || 'USD';
   document.getElementById('set-decimals').value = settings.decimals ?? 2;
+  document.getElementById('set-mt5-timezone').value = settings.mt5Timezone ?? 2;
   document.getElementById('lbl-set-balance').textContent = 'เงินทุนเริ่มต้น (' + getCurrencySymbol() + ')';
   updateSidebar();
 }
 function saveSettings() {
   const prevCurrency = settings.currency;
   const prevDecimals = settings.decimals;
+  const prevTimezone = settings.mt5Timezone;
   settings.name = document.getElementById('set-name').value;
   settings.balance = parseFloat(document.getElementById('set-balance').value) || 0;
   settings.strategy = document.getElementById('set-strategy').value;
   settings.currency = document.getElementById('set-currency').value;
   settings.decimals = parseInt(document.getElementById('set-decimals').value);
+  settings.mt5Timezone = parseFloat(document.getElementById('set-mt5-timezone').value);
   localStorage.setItem('dosho_settings', JSON.stringify(settings));
   const a = accounts.find(x => x.id === activeAccountId);
   if(a) { a.balance = settings.balance; a.currency = settings.currency; a.strategy = settings.strategy; persistAccounts(); }
@@ -2287,7 +2353,7 @@ function saveSettings() {
   document.getElementById('lbl-f-pnl').textContent = 'กำไร/ขาดทุนสุทธิ (' + getCurrencySymbol() + ') *';
   updateSidebar();
   renderChecklist();
-  if (settings.currency !== prevCurrency || settings.decimals !== prevDecimals) {
+  if (settings.currency !== prevCurrency || settings.decimals !== prevDecimals || settings.mt5Timezone !== prevTimezone) {
     renderDashboard(); renderCalendar(); renderTradeTable(); renderReports();
   }
 }

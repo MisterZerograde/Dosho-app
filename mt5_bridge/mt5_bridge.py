@@ -4,7 +4,7 @@ import re
 import json
 import threading
 import time
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 try:
@@ -92,8 +92,8 @@ def _deals_to_trades(deals):
             "id":        str(pid),
             "symbol":    _strip_suffix(open_d.symbol),
             "direction": "BUY" if open_d.type == mt5.DEAL_TYPE_BUY else "SELL",
-            "openDt":    datetime.fromtimestamp(open_d.time).strftime("%Y-%m-%dT%H:%M"),
-            "closeDt":   datetime.fromtimestamp(last_close.time).strftime("%Y-%m-%dT%H:%M"),
+            "openDt":    datetime.fromtimestamp(open_d.time, tz=timezone.utc).strftime("%Y-%m-%dT%H:%M"),
+            "closeDt":   datetime.fromtimestamp(last_close.time, tz=timezone.utc).strftime("%Y-%m-%dT%H:%M"),
             "openPx":    round(open_d.price, 5),
             "closePx":   round(last_close.price, 5),
             "volume":    open_d.volume,

@@ -1195,9 +1195,49 @@ function getBkkDate(dtStr) {
 }
 function fmtBKK(dtStr, opts) {
   if (!dtStr) return '—';
+  
+  const hasTime = opts && (opts.hour !== undefined || opts.minute !== undefined);
+  const hasDate = opts && (opts.day !== undefined || opts.month !== undefined || opts.year !== undefined || opts.weekday !== undefined);
+  
+  if (dtStr.includes('Z') || (dtStr.includes('+') && dtStr.indexOf('+') > 10) || (dtStr.split('-').length > 3)) {
+    return new Date(dtStr).toLocaleString('th-TH', { timeZone: 'Asia/Bangkok', ...opts });
+  }
+  
+  const parts = dtStr.split(/[-T:]/);
+  if (parts.length < 5) {
+    return new Date(dtStr).toLocaleString('th-TH', { timeZone: 'Asia/Bangkok', ...opts });
+  }
+  
+  const year = parseInt(parts[0], 10);
+  const month = parseInt(parts[1], 10) - 1;
+  const day = parseInt(parts[2], 10);
+  const hour = parseInt(parts[3], 10);
+  const minute = parseInt(parts[4], 10);
+  
+  const brokerUtcDate = new Date(Date.UTC(year, month, day, hour, minute));
   const bkkDate = getBkkDate(dtStr);
-  if (!bkkDate) return '—';
-  return bkkDate.toLocaleString('th-TH', { timeZone: 'Asia/Bangkok', ...opts });
+  
+  if (hasDate && hasTime) {
+    const dateOpts = { ...opts };
+    delete dateOpts.hour;
+    delete dateOpts.minute;
+    delete dateOpts.second;
+    
+    const timeOpts = { ...opts };
+    delete timeOpts.weekday;
+    delete timeOpts.year;
+    delete timeOpts.month;
+    delete timeOpts.day;
+    
+    const dateStr = brokerUtcDate.toLocaleString('th-TH', { timeZone: 'UTC', ...dateOpts });
+    const timeStr = bkkDate.toLocaleString('th-TH', { timeZone: 'Asia/Bangkok', ...timeOpts });
+    
+    return `${dateStr} ${timeStr}`.trim().replace(/\s+/g, ' ');
+  } else if (hasDate) {
+    return brokerUtcDate.toLocaleString('th-TH', { timeZone: 'UTC', ...opts });
+  } else {
+    return bkkDate.toLocaleString('th-TH', { timeZone: 'Asia/Bangkok', ...opts });
+  }
 }
 
 /* ═══ MODAL ═══ */

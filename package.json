@@ -1,0 +1,47 @@
+{
+  "name": "dosho",
+  "version": "1.0.0",
+  "description": "Dosho Trading Journal",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder --win --x64",
+    "create-icons": "node scripts/create-icons.js"
+  },
+  "devDependencies": {
+    "electron": "^31.0.0",
+    "electron-builder": "^24.0.0"
+  },
+  "dependencies": {
+    "tree-kill": "^1.2.2"
+  },
+  "build": {
+    "appId": "com.dosho.app",
+    "productName": "Dosho",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "main.js",
+      "index.html",
+      "assets/**/*"
+    ],
+    "extraResources": [
+      {
+        "from": "mt5_bridge/dist/mt5_bridge.exe",
+        "to": "mt5_bridge.exe"
+      }
+    ],
+    "win": {
+      "target": "nsis",
+      "icon": "assets/icon.ico",
+      "requestedExecutionLevel": "asInvoker"
+    },
+    "nsis": {
+      "oneClick": true,
+      "perMachine": false,
+      "deleteAppDataOnUninstall": false,
+      "shortcutName": "Dosho"
+    }
+  }
+}

@@ -171,7 +171,7 @@ CORS(app, resources={r"/*": {"origins": "*"}})
 def _cors(response):
     response.headers["Access-Control-Allow-Origin"]          = "*"
     response.headers["Access-Control-Allow-Private-Network"] = "true"
-    response.headers["Access-Control-Allow-Methods"]         = "GET, OPTIONS"
+    response.headers["Access-Control-Allow-Methods"]         = "GET, POST, OPTIONS"
     response.headers["Access-Control-Allow-Headers"]         = (
         "Content-Type, Access-Control-Request-Private-Network"
     )
@@ -190,6 +190,16 @@ def route_status():
         if _cache["synced_at"]:
             resp["lastSync"] = {"time": _cache["synced_at"], "count": _cache["count"]}
     return jsonify(resp)
+
+@app.route("/config", methods=["POST", "OPTIONS"])
+def route_set_config():
+    if request.method == "OPTIONS":
+        return jsonify({}), 200
+    data = request.get_json(force=True, silent=True) or {}
+    if "period_days"   in data: _config["period_days"]   = int(data["period_days"])
+    if "interval_secs" in data: _config["interval_secs"] = int(data["interval_secs"])
+    _save_config()
+    return jsonify({"ok": True, "config": _config})
 
 @app.route("/sync")
 def route_sync():
@@ -361,6 +371,11 @@ def main():
     threading.Thread(target=_status_loop,      daemon=True).start()
     threading.Thread(target=_auto_sync_loop,   daemon=True).start()
     time.sleep(1)
+
+    if '--headless' in sys.argv:
+        while True:
+            time.sleep(3600)
+        return
 
     icon = pystray.Icon("MT5 Bridge", _build_icon(), _tray_title(), menu=_build_menu())
     _icon_ref = icon

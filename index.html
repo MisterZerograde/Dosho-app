@@ -2946,6 +2946,7 @@ async function checkMT5Bridge() {
     }
   } catch {
     _updateDot('offline', 'MT5 Bridge ออฟไลน์\nคลิกเพื่อดูวิธีติดตั้ง');
+    if (!window.__ELECTRON__) _showMT5SetupModal();
   }
 }
 
@@ -3056,7 +3057,7 @@ async function syncMT5() {
     );
   } catch (e) {
     const offline = e instanceof TypeError || e.name === 'AbortError' || e.name === 'TimeoutError';
-    if (offline) { _updateDot('offline', 'MT5 Bridge ออฟไลน์'); _showMT5SetupModal(); }
+    if (offline) { _updateDot('offline', 'MT5 Bridge ออฟไลน์'); if (!window.__ELECTRON__) _showMT5SetupModal(); }
     else { await checkMT5Bridge(); _showSyncToast('✗ ' + e.message, true); }
   } finally {
     btn.disabled = false;
@@ -3265,6 +3266,31 @@ function handleBackupImport(e) {
   };
   reader.readAsText(file, 'UTF-8');
 }
+
+window._bgSyncTrades = function(imported) {
+  if (!Array.isArray(imported) || !imported.length) return 0;
+  let added = 0;
+  imported.forEach(t => {
+    const dup = trades.some(x =>
+      x.openDt === t.openDt && x.symbol === t.symbol && Math.abs(x.pnl - t.pnl) < 0.01
+    );
+    if (!dup) { trades.push({ ...t, source: 'sync' }); added++; }
+  });
+  if (added > 0) {
+    trades.sort((a, b) => getTradeTimeMs(a.openDt) - getTradeTimeMs(b.openDt));
+    persist();
+    if (!document.hidden) {
+      renderDashboard(); renderCalendar(); renderTradeTable(); renderReports();
+    }
+  }
+  return added;
+};
+
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden) {
+    renderDashboard(); renderCalendar(); renderTradeTable(); renderReports();
+  }
+});
 
 /* ═══ BOOT ═══ */
 renderTags();

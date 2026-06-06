@@ -2,5 +2,8 @@
 Thumbs.db
 node_modules/
 release/
-assets/
+assets/icon.png
+assets/icon.ico
+assets/tray-icon.png
+assets/tray-icon-syncing.png
 mt5_bridge/dist/

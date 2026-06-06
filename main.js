@@ -150,13 +150,10 @@ function createWindow() {
     show: false,
     icon: path.join(__dirname, 'assets', 'icon.ico'),
     autoHideMenuBar: true,
-    webPreferences: { nodeIntegration: false, contextIsolation: true },
+    webPreferences: { nodeIntegration: false, contextIsolation: true, preload: path.join(__dirname, 'preload.js') },
   });
   win.loadFile('index.html');
-  win.webContents.on('did-finish-load', () => {
-    rendererReady = true;
-    win.webContents.executeJavaScript('window.__ELECTRON__ = true;').catch(() => {});
-  });
+  win.webContents.on('did-finish-load', () => { rendererReady = true; });
   win.on('close', e => { if (!isQuitting) { e.preventDefault(); win.hide(); } });
 }
 

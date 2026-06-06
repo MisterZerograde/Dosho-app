@@ -5,8 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Dosho — บันทึกการเทรด</title>
 <script>(function(){var m=localStorage.getItem('dosho_theme')||'system';if(m==='dark'||(m==='system'&&window.matchMedia('(prefers-color-scheme:dark)').matches))document.documentElement.dataset.theme='dark';})()</script>
-<link href="https://fonts.googleapis.com/css2?family=Mitr:wght@200;300;400;500;600;700&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<link href="./assets/fonts/mitr.css" rel="stylesheet">
+<script src="./assets/vendor/chart.umd.min.js"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;text-rendering:optimizeLegibility}
 :root{
@@ -3065,8 +3065,13 @@ function _updateBridgeSettings(d) {
       _bridgeLastSyncTime = null;
     }
   } else {
-    info.textContent = 'Bridge ออฟไลน์ — ดาวน์โหลดและเปิด mt5_bridge.exe';
-    if (dlRow) dlRow.style.display = 'block';
+    if (window.__ELECTRON__) {
+      info.textContent = 'Bridge กำลังเริ่มต้น — รอสักครู่...';
+      if (dlRow) dlRow.style.display = 'none';
+    } else {
+      info.textContent = 'Bridge ออฟไลน์ — ดาวน์โหลดและเปิด mt5_bridge.exe';
+      if (dlRow) dlRow.style.display = 'block';
+    }
     [perEl, intEl, stEl].forEach(el => { if (el) el.disabled = true; });
     _bridgeNextSyncAt = null;
     _bridgeIntervalSecs = 0;

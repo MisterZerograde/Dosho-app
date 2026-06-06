@@ -1,7 +1,8 @@
 'use strict';
-const { app, BrowserWindow, Tray, Menu, nativeImage } = require('electron');
+const { app, BrowserWindow, Tray, Menu, nativeImage, ipcMain, dialog, shell } = require('electron');
 const path     = require('path');
 const http     = require('http');
+const fs       = require('fs');
 const { spawn } = require('child_process');
 const treeKill  = require('tree-kill');
 
@@ -63,7 +64,6 @@ async function startBridge() {
     return; // already running
   } catch {}
 
-  const fs = require('fs');
   if (!fs.existsSync(BRIDGE_EXE)) {
     console.warn('[bridge] not found:', BRIDGE_EXE);
     return;
@@ -153,6 +153,23 @@ function createWindow() {
     webPreferences: { nodeIntegration: false, contextIsolation: true, preload: path.join(__dirname, 'preload.js') },
   });
   win.loadFile('index.html');
+  win.webContents.on('context-menu', e => e.preventDefault());
+  win.webContents.setVisualZoomLevelLimits(1, 1);
+  win.webContents.on('before-input-event', (event, input) => {
+    if (app.isPackaged) {
+      if (input.key === 'F5') { event.preventDefault(); return; }
+      if ((input.control || input.meta) && input.key.toLowerCase() === 'r') { event.preventDefault(); return; }
+    }
+    if (!(input.control || input.meta)) return;
+    if (['+', '-', '=', '0'].includes(input.key)) event.preventDefault();
+  });
+  win.webContents.setWindowOpenHandler(({ url }) => {
+    if (!url.startsWith('file://')) shell.openExternal(url);
+    return { action: 'deny' };
+  });
+  win.webContents.on('will-navigate', (event, url) => {
+    if (!url.startsWith('file://')) { event.preventDefault(); shell.openExternal(url); }
+  });
   win.webContents.on('did-finish-load', () => { rendererReady = true; });
   win.on('close', e => { if (!isQuitting) { e.preventDefault(); win.hide(); } });
 }
@@ -208,6 +225,12 @@ async function pollStatus() {
 // ── App lifecycle ─────────────────────────────────────────────────────────────
 app.whenReady().then(async () => {
   createWindow();
+
+  ipcMain.handle('dialog:openFile', (_, opts) => dialog.showOpenDialog(win, opts));
+  ipcMain.handle('dialog:saveFile', (_, opts) => dialog.showSaveDialog(win, opts));
+  ipcMain.handle('fs:readBinary',   (_, p)       => fs.readFileSync(p));
+  ipcMain.handle('fs:writeText',    (_, p, t)    => fs.writeFileSync(p, t, 'utf-8'));
+
   await startBridge();
 
   tray = new Tray(nativeImage.createFromPath(iconPath(false)));

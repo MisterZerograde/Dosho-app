@@ -39,7 +39,7 @@ body{font-family:'Mitr',-apple-system,sans-serif;background:var(--bg);color:var(
 .app{display:flex;height:100vh;height:100dvh}
 
 /* ─── SIDEBAR ─── */
-.sidebar{width:var(--sidebar);background:var(--sidebar-bg);border-right:1px solid var(--sidebar-border);display:flex;flex-direction:column;flex-shrink:0}
+.sidebar{width:var(--sidebar);background:var(--sidebar-bg);border-right:1px solid var(--sidebar-border);display:flex;flex-direction:column;flex-shrink:0;user-select:none}
 .sb-logo{height:var(--topbar);display:flex;align-items:center;padding:0 18px;border-bottom:1px solid var(--sidebar-border);gap:10px}
 .sb-mark{width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,#3e45b8,#6366f1);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;color:#fff;flex-shrink:0}
 .sb-name{font-weight:500;font-size:15px;letter-spacing:-.4px;color:var(--sidebar-text)}
@@ -59,10 +59,10 @@ body{font-family:'Mitr',-apple-system,sans-serif;background:var(--bg);color:var(
 
 /* ─── MAIN ─── */
 .main{flex:1;display:flex;flex-direction:column;overflow:hidden;min-height:0}
-.topbar{height:var(--topbar);background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 18px;gap:10px;flex-shrink:0}
+.topbar{height:var(--topbar);background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 18px;gap:10px;flex-shrink:0;user-select:none}
 .tb-title{font-size:15px;font-weight:500}
 .tb-spacer{flex:1}
-.btn{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;border:none;transition:all .15s;font-family:inherit;white-space:nowrap}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;border:none;transition:all .15s;font-family:inherit;white-space:nowrap;user-select:none}
 .btn-ghost{background:transparent;color:var(--text2);border:1px solid var(--border)}
 .btn-ghost:hover{background:var(--surface2);color:var(--text)}
 .btn-primary{background:linear-gradient(135deg,#3e45b8,var(--purple));color:#fff}
@@ -93,7 +93,7 @@ body{font-family:'Mitr',-apple-system,sans-serif;background:var(--bg);color:var(
 
 /* ─── CARD ─── */
 .card{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;box-shadow:0 1px 3px rgba(40,44,103,0.05)}
-.card-hd{display:flex;align-items:center;gap:8px;padding:12px 16px;border-bottom:1px solid var(--border2)}
+.card-hd{display:flex;align-items:center;gap:8px;padding:12px 16px;border-bottom:1px solid var(--border2);user-select:none}
 .card-title{font-size:13px;font-weight:600;flex:1}
 .card-bd{padding:14px 16px}
 
@@ -567,11 +567,11 @@ body{font-family:'Mitr',-apple-system,sans-serif;background:var(--bg);color:var(
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0018.49 15"/></svg>
       <span class="btn-label">Sync MT5</span>
     </button>
-    <label class="btn btn-ghost" style="cursor:pointer;display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;padding:7px 13px;margin-right:6px" title="นำเข้า CSV จาก MT5">
+    <button class="btn btn-ghost" style="font-size:12px;font-weight:600;padding:7px 13px;margin-right:6px" title="นำเข้า CSV จาก MT5" onclick="importMT5()">
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
       <span class="btn-label">Import MT5</span>
-      <input type="file" accept=".csv,.htm,.html" style="display:none" onchange="handleCSVImport(event)">
-    </label>
+    </button>
+    <input type="file" id="mt5-file-input" accept=".csv,.htm,.html" style="display:none" onchange="handleCSVImport(event)">
     <button class="btn" style="background: linear-gradient(135deg, #282C67, #4F46E5); color: #fff; font-size: 12px; font-weight: 700; padding: 8px 16px; border-radius: 8px; box-shadow: 0 4px 12px rgba(40, 44, 103, 0.2); display: flex; align-items: center; gap: 5px; border: none; cursor: pointer; transition: transform 0.1s ease;" onclick="openModal()" onmousedown="this.style.transform='scale(0.97)'" onmouseup="this.style.transform='scale(1)'" onmouseleave="this.style.transform='scale(1)'">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="stroke-linecap: round; stroke-linejoin: round;"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
       <span class="btn-label">บันทึกการเทรดใหม่</span>
@@ -2954,49 +2954,68 @@ function _showImportModeModal() {
   });
 }
 
+async function importMT5() {
+  if (window.__ELECTRON__ && window.electronAPI) {
+    const { canceled, filePaths } = await window.electronAPI.openFile({
+      title: 'เลือกไฟล์ MT5',
+      filters: [{ name: 'MT5 Files', extensions: ['csv', 'htm', 'html'] }],
+      properties: ['openFile'],
+    });
+    if (canceled || !filePaths.length) return;
+    const p = filePaths[0];
+    const u8 = await window.electronAPI.readBinary(p);
+    const ab = u8.buffer.slice(u8.byteOffset, u8.byteOffset + u8.byteLength);
+    await _processImportData(ab, p.split(/[\\/]/).pop());
+  } else {
+    document.getElementById('mt5-file-input').click();
+  }
+}
+
+async function _processImportData(ab, filename) {
+  const bytes = new Uint8Array(ab);
+  let text;
+  if (bytes[0] === 0xFF && bytes[1] === 0xFE) {
+    text = new TextDecoder('utf-16le').decode(ab);
+  } else {
+    text = new TextDecoder('utf-8').decode(ab);
+  }
+  const isHtml = /\.html?$/i.test(filename) || text.trimStart().startsWith('<');
+  const imported = isHtml ? parseMT5HTML(text) : parseMT5CSV(text);
+  if (!imported.length) {
+    alert('ไม่พบรายการเทรดในไฟล์นี้\n\nกรุณาส่งออกจาก MT5: View → Terminal → History → คลิกขวา → Save as Report');
+    return;
+  }
+  const mode = await _showImportModeModal();
+  if (!mode) return;
+  let added = 0;
+  if (mode === 'replace') {
+    trades.length = 0;
+    imported.forEach(t => { trades.push({ ...t, source: 'import' }); added++; });
+  } else {
+    imported.forEach(t => {
+      const dup = trades.some(x => x.openDt === t.openDt && x.symbol === t.symbol && Math.abs(x.pnl - t.pnl) < 0.01);
+      if (!dup) { trades.push({ ...t, source: 'import' }); added++; }
+    });
+  }
+  trades.sort((a, b) => getTradeTimeMs(a.openDt) - getTradeTimeMs(b.openDt));
+  persist();
+  renderDashboard(); renderCalendar(); renderTradeTable(); renderReports();
+  const status = document.getElementById('import-status');
+  if (status) {
+    status.style.display = 'block';
+    status.textContent = mode === 'replace'
+      ? `✓ แทนที่สำเร็จ! นำเข้า ${added} รายการ`
+      : `✓ นำเข้าสำเร็จ! เพิ่ม ${added} รายการใหม่ (ข้าม ${imported.length - added} รายการที่มีอยู่แล้ว)`;
+    setTimeout(() => { status.style.display = 'none'; }, 5000);
+  }
+}
+
 function handleCSVImport(e) {
   const file = e.target.files[0];
-  if(!file) return;
+  if (!file) return;
   const reader = new FileReader();
   reader.onload = async (ev) => {
-    const ab = ev.target.result;
-    const bytes = new Uint8Array(ab);
-    let text;
-    if(bytes[0] === 0xFF && bytes[1] === 0xFE) {
-      text = new TextDecoder('utf-16le').decode(ab);
-    } else {
-      text = new TextDecoder('utf-8').decode(ab);
-    }
-    const isHtml = /\.html?$/i.test(file.name) || text.trimStart().startsWith('<');
-    const imported = isHtml ? parseMT5HTML(text) : parseMT5CSV(text);
-    if(!imported.length) {
-      alert('ไม่พบรายการเทรดในไฟล์นี้\n\nกรุณาส่งออกจาก MT5: View → Terminal → History → คลิกขวา → Save as Report');
-      e.target.value = '';
-      return;
-    }
-    const mode = await _showImportModeModal();
-    if (!mode) { e.target.value = ''; return; }
-    let added = 0;
-    if (mode === 'replace') {
-      trades.length = 0;
-      imported.forEach(t => { trades.push({ ...t, source: 'import' }); added++; });
-    } else {
-      imported.forEach(t => {
-        const dup = trades.some(x => x.openDt === t.openDt && x.symbol === t.symbol && Math.abs(x.pnl - t.pnl) < 0.01);
-        if(!dup) { trades.push({ ...t, source: 'import' }); added++; }
-      });
-    }
-    trades.sort((a,b) => getTradeTimeMs(a.openDt) - getTradeTimeMs(b.openDt));
-    persist();
-    renderDashboard(); renderCalendar(); renderTradeTable(); renderReports();
-    const status = document.getElementById('import-status');
-    if(status) {
-      status.style.display = 'block';
-      status.textContent = mode === 'replace'
-        ? `✓ แทนที่สำเร็จ! นำเข้า ${added} รายการ`
-        : `✓ นำเข้าสำเร็จ! เพิ่ม ${added} รายการใหม่ (ข้าม ${imported.length - added} รายการที่มีอยู่แล้ว)`;
-      setTimeout(() => { status.style.display = 'none'; }, 5000);
-    }
+    await _processImportData(ev.target.result, file.name);
     e.target.value = '';
   };
   reader.readAsArrayBuffer(file);
@@ -3368,7 +3387,7 @@ function parseMT5CSV(text) {
 }
 
 /* ═══ BACKUP / RESTORE ═══ */
-function exportBackup() {
+async function exportBackup() {
   const data = {
     version: 2,
     exportedAt: new Date().toISOString(),
@@ -3378,12 +3397,24 @@ function exportBackup() {
     tags: selectedTags,
     tagPool: defaultTags,
   };
-  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = `dosho-backup-${new Date().toISOString().slice(0,10)}.json`;
-  a.click();
-  URL.revokeObjectURL(a.href);
+  const json = JSON.stringify(data, null, 2);
+  const filename = `dosho-backup-${new Date().toISOString().slice(0, 10)}.json`;
+  if (window.__ELECTRON__ && window.electronAPI) {
+    const { canceled, filePath } = await window.electronAPI.saveFile({
+      title: 'บันทึก Backup',
+      defaultPath: filename,
+      filters: [{ name: 'JSON', extensions: ['json'] }],
+    });
+    if (canceled || !filePath) return;
+    await window.electronAPI.writeText(filePath, json);
+  } else {
+    const blob = new Blob([json], { type: 'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(a.href);
+  }
 }
 
 function handleBackupImport(e) {

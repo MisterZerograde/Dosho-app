@@ -171,6 +171,7 @@ function createWindow() {
     if (!url.startsWith('file://')) { event.preventDefault(); shell.openExternal(url); }
   });
   win.webContents.on('did-finish-load', () => { rendererReady = true; });
+  win.once('ready-to-show', () => win.show());
   win.on('close', e => { if (!isQuitting) { e.preventDefault(); win.hide(); } });
 }
 
@@ -236,10 +237,10 @@ app.whenReady().then(async () => {
   tray = new Tray(nativeImage.createFromPath(iconPath(false)));
   tray.setToolTip('Dosho — บันทึกการเทรด');
   tray.setContextMenu(buildMenu());
+  tray.on('click', showWindow);
   tray.on('double-click', showWindow);
 
-  const { wasOpenedAsHidden } = app.getLoginItemSettings();
-  if (!wasOpenedAsHidden) showWindow();
+  showWindow();
 
   setTimeout(pollStatus, 2500);
   setInterval(pollStatus, POLL_MS);

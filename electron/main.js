@@ -13,7 +13,7 @@ const BRIDGE_URL = 'http://127.0.0.1:5678';
 const POLL_MS    = 15_000;
 const BRIDGE_EXE = app.isPackaged
   ? path.join(process.resourcesPath, 'mt5_bridge.exe')
-  : path.join(__dirname, 'mt5_bridge', 'dist', 'mt5_bridge.exe');
+  : path.join(__dirname, '..', 'mt5_bridge', 'dist', 'mt5_bridge.exe');
 
 let win          = null;
 let tray         = null;
@@ -61,7 +61,7 @@ function httpPost(url, data) {
 async function startBridge() {
   try {
     await httpGet(`${BRIDGE_URL}/status`, 2000);
-    return; // already running
+    return;
   } catch {}
 
   if (!fs.existsSync(BRIDGE_EXE)) {
@@ -140,7 +140,7 @@ function rebuildMenu() {
 }
 
 function iconPath(syncing = false) {
-  return path.join(__dirname, 'assets', syncing ? 'tray-icon-syncing.png' : 'tray-icon.png');
+  return path.join(__dirname, '..', 'assets', syncing ? 'tray-icon-syncing.png' : 'tray-icon.png');
 }
 
 // ── Window ────────────────────────────────────────────────────────────────────
@@ -148,11 +148,15 @@ function createWindow() {
   win = new BrowserWindow({
     width: 1320, height: 840, minWidth: 960, minHeight: 640,
     show: false,
-    icon: path.join(__dirname, 'assets', 'icon.ico'),
+    icon: path.join(__dirname, '..', 'assets', 'icon.ico'),
     autoHideMenuBar: true,
-    webPreferences: { nodeIntegration: false, contextIsolation: true, preload: path.join(__dirname, 'preload.js') },
+    webPreferences: {
+      nodeIntegration: false,
+      contextIsolation: true,
+      preload: path.join(__dirname, 'preload.js'),
+    },
   });
-  win.loadFile('index.html');
+  win.loadFile(path.join(__dirname, '..', 'index.html'));
   win.webContents.on('context-menu', e => e.preventDefault());
   win.webContents.setVisualZoomLevelLimits(1, 1);
   win.webContents.on('before-input-event', (event, input) => {

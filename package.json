@@ -2,7 +2,7 @@
   "name": "dosho",
   "version": "1.0.0",
   "description": "Dosho Trading Journal",
-  "main": "main.js",
+  "main": "electron/main.js",
   "scripts": {
     "start": "electron .",
     "build": "electron-builder --win --x64",
@@ -22,8 +22,8 @@
       "output": "release"
     },
     "files": [
-      "main.js",
-      "preload.js",
+      "electron/main.js",
+      "electron/preload.js",
       "index.html",
       "assets/**/*"
     ],

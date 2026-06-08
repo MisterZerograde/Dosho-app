@@ -1530,9 +1530,9 @@ function calcStats(ts) {
   const streakScore = Math.min(maxW/10*100,100)*0.2;
   const score = Math.round(wrScore + pfScore + rrScore + streakScore);
 
-  // Sharpe ratio (per-trade)
+  // Sharpe ratio (per-trade, sample std N-1 — matches MT5)
   const mean = netPnl / ts.length;
-  const variance = pnls.reduce((s,v) => s + (v-mean)**2, 0) / ts.length;
+  const variance = ts.length > 1 ? pnls.reduce((s,v) => s + (v-mean)**2, 0) / (ts.length - 1) : 0;
   const std = Math.sqrt(variance);
   const sharpe = std > 0 ? +(mean / std).toFixed(2) : null;
 
@@ -1738,7 +1738,7 @@ function openFormulaModal(type) {
   } else if (type === 'sharpe') {
     const pnls = trades.map(t => t.pnl);
     const mean = s.netPnl / trades.length;
-    const std = Math.sqrt(pnls.reduce((a,v) => a + (v-mean)**2, 0) / trades.length);
+    const std = trades.length > 1 ? Math.sqrt(pnls.reduce((a,v) => a + (v-mean)**2, 0) / (trades.length - 1)) : 0;
     html = `
       <div class="formula-eq">กำไรเฉลี่ยต่อไม้ ÷ ส่วนเบี่ยงเบนมาตรฐาน</div>
       <div style="margin-top:12px">

@@ -1,5 +1,6 @@
 'use strict';
 const { app, BrowserWindow, Tray, Menu, nativeImage, ipcMain, dialog, shell } = require('electron');
+const { autoUpdater } = require('electron-updater');
 const path     = require('path');
 const http     = require('http');
 const fs       = require('fs');
@@ -248,6 +249,8 @@ app.whenReady().then(async () => {
 
   setTimeout(pollStatus, 2500);
   setInterval(pollStatus, POLL_MS);
+
+  if (app.isPackaged) autoUpdater.checkForUpdatesAndNotify();
 });
 
 app.on('before-quit', () => { isQuitting = true; stopBridge(); });
